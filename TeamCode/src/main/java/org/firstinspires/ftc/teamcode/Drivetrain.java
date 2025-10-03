@@ -30,10 +30,10 @@ public class Drivetrain {
         // --- INITIALIZATION ---
 
         // Initialize drive motors from the hardware map
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        leftFront = hardwareMap.get(DcMotor.class, "lf");
+        leftBack = hardwareMap.get(DcMotor.class, "lr");
+        rightFront = hardwareMap.get(DcMotor.class, "rf");
+        rightBack = hardwareMap.get(DcMotor.class, "rr");
 
         // Initialize the IMU from the hardware map
         imu = hardwareMap.get(IMU.class, "imu");
@@ -55,8 +55,8 @@ public class Drivetrain {
         //      RevHubOrientationOnRobot.LogoFacingDirection.UP,
         //      RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.LEFT
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
         ));
 
         // Initialize the IMU with the specified parameters

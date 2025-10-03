@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -12,6 +13,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class TeleOp extends LinearOpMode {
 
     private Drivetrain drivetrain;
+
+    Gamepad currentGamepad1 = new Gamepad();
+    Gamepad previousGamepad1 = new Gamepad();
+    Gamepad currentGamepad2 = new Gamepad();
+    Gamepad previousGamepad2 = new Gamepad();
 
     // Variable to track the current driving mode
     private boolean isFieldCentric = true;
@@ -26,7 +32,6 @@ public class TeleOp extends LinearOpMode {
 
         telemetry.addLine("Initialization Complete. Ready to start.");
         telemetry.update();
-
         // Wait for the OpMode to be started by the driver
         waitForStart();
 
@@ -37,6 +42,9 @@ public class TeleOp extends LinearOpMode {
 
         // --- MAIN LOOP ---
         while (opModeIsActive()) {
+
+            currentGamepad1.copy(gamepad1);
+            currentGamepad2.copy(gamepad2);
 
             // --- TOGGLE FIELD-CENTRIC MODE ---
             // Use a simple boolean flag to ensure the toggle happens only once per press.
@@ -62,7 +70,11 @@ public class TeleOp extends LinearOpMode {
             // --- TELEMETRY ---
             telemetry.addData("Driving Mode", isFieldCentric ? "Field-Centric" : "Robot-Centric");
             telemetry.addLine("Press 'Y' to toggle mode.");
+
             telemetry.update();
+            previousGamepad1.copy(currentGamepad1);
+            previousGamepad2.copy(currentGamepad2);
+
         }
     }
 }
