@@ -20,7 +20,7 @@ public class TeleOp extends LinearOpMode {
     Gamepad previousGamepad2 = new Gamepad();
 
     // Variable to track the current driving mode
-    private boolean isFieldCentric = true;
+    private boolean isFieldCentric = false;
 
     // Variables to manage the toggle button state
     private boolean yButtonPressed = false;
@@ -48,20 +48,13 @@ public class TeleOp extends LinearOpMode {
 
             // --- TOGGLE FIELD-CENTRIC MODE ---
             // Use a simple boolean flag to ensure the toggle happens only once per press.
-            if (gamepad1.y && !yButtonPressed) {
-                isFieldCentric = !isFieldCentric;
-                if(isFieldCentric) {
-                    // Reset the IMU heading when switching back to field-centric
-                    drivetrain.resetIMU();
-                }
-            }
+
             yButtonPressed = gamepad1.y;
 
             // --- GAMEPAD INPUTS ---
-            // The Y-axis is inverted on gamepads, so we negate it.
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            double y = gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x;
+            double rx = -gamepad1.right_stick_x;
 
             // --- DRIVE THE ROBOT ---
             // Pass the joystick values and the current drive mode to the drivetrain object.
@@ -70,6 +63,14 @@ public class TeleOp extends LinearOpMode {
             // --- TELEMETRY ---
             telemetry.addData("Driving Mode", isFieldCentric ? "Field-Centric" : "Robot-Centric");
             telemetry.addLine("Press 'Y' to toggle mode.");
+
+            if (gamepad1.left_trigger >= 0.5) {
+                drivetrain.intakeIn();
+            } else if (gamepad1.right_trigger >= 0.5) {
+                drivetrain.intakeOut();
+            } else {
+                drivetrain.intakeStop();
+            }
 
             telemetry.update();
             previousGamepad1.copy(currentGamepad1);

@@ -19,6 +19,8 @@ public class Drivetrain {
     private final DcMotor rightFront;
     private final DcMotor rightBack;
 
+    private final DcMotor intake;
+
     // IMU variable
     private final IMU imu;
 
@@ -34,6 +36,8 @@ public class Drivetrain {
         leftBack = hardwareMap.get(DcMotor.class, "lr");
         rightFront = hardwareMap.get(DcMotor.class, "rf");
         rightBack = hardwareMap.get(DcMotor.class, "rr");
+        intake = hardwareMap.get(DcMotor.class, "intake");
+
 
         // Initialize the IMU from the hardware map
         imu = hardwareMap.get(IMU.class, "imu");
@@ -48,6 +52,9 @@ public class Drivetrain {
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
 
         // Define the orientation of the robot's control hub
         // TODO: Adjust these values based on how the control hub is mounted on your robot.
@@ -56,7 +63,7 @@ public class Drivetrain {
         //      RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+                RevHubOrientationOnRobot.UsbFacingDirection.UP
         ));
 
         // Initialize the IMU with the specified parameters
@@ -106,6 +113,20 @@ public class Drivetrain {
         rightFront.setPower(rf);
         rightBack.setPower(rb);
     }
+
+    public void setIntakePower(double power) {
+        intake.setPower(power);
+    }
+    public void intakeIn() {
+        setIntakePower(1);
+    }
+    public void intakeOut() {
+        setIntakePower(-1);
+    }
+    public void intakeStop() {
+        setIntakePower(0);
+    }
+
 
     /**
      * Resets the IMU's yaw angle to zero. This is useful for recalibrating the "forward" direction
