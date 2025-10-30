@@ -9,10 +9,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * It uses a Drivetrain object to handle all movement and hardware interaction,
  * keeping this class focused on driver controls and the OpMode flow.
  */
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "(Jeff is awesome and made the best TeleOp) Tele-Op")
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "(Jeff is dope and made the best TeleOp) Tele-Op")
 public class TeleOp extends LinearOpMode {
-
-    private Drivetrain drivetrain;
 
     Gamepad currentGamepad1 = new Gamepad();
     Gamepad previousGamepad1 = new Gamepad();
@@ -21,14 +19,15 @@ public class TeleOp extends LinearOpMode {
 
     // Variable to track the current driving mode
     private boolean isFieldCentric = false;
-
+    private boolean flyWheelOn = false;
+    private boolean feederOn = false;
     // Variables to manage the toggle button state
     private boolean yButtonPressed = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
         // --- INITIALIZATION ---
-        drivetrain = new Drivetrain(hardwareMap);
+        Drivetrain drivetrain = new Drivetrain(hardwareMap);
 
         telemetry.addLine("Initialization Complete. Ready to start.");
         telemetry.update();
@@ -64,12 +63,24 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Driving Mode", isFieldCentric ? "Field-Centric" : "Robot-Centric");
             telemetry.addLine("Press 'Y' to toggle mode.");
 
-            if (gamepad1.left_trigger >= 0.5) {
+            if (gamepad1.right_trigger >= 0.5) {
                 drivetrain.intakeIn();
-            } else if (gamepad1.right_trigger >= 0.5) {
+            } else if (gamepad1.left_trigger >= 0.5) {
                 drivetrain.intakeOut();
             } else {
                 drivetrain.intakeStop();
+            }
+            if (gamepad1.right_bumper) {
+                    drivetrain.setFlywheelPower(-1);
+            } else{
+                drivetrain.setFlywheelPower(0);
+            }
+
+            if (gamepad1.left_bumper) {
+                drivetrain.lowerFeeder.setPower(1);
+                drivetrain.upperFeeder.setPower(1);
+            } else {
+                drivetrain.setFeederPower(0);
             }
 
             telemetry.update();

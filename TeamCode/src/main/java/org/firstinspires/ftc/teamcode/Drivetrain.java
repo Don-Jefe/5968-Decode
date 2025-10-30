@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
@@ -19,7 +22,15 @@ public class Drivetrain {
     private final DcMotor rightFront;
     private final DcMotor rightBack;
 
+    // Intake variables
     private final DcMotor intake;
+    public final CRServo lowerFeeder;
+    public final CRServo upperFeeder;
+
+
+    // Out-take Variables
+    private final DcMotor rightFlywheel;
+    private final DcMotor leftFlywheel;
 
     // IMU variable
     private final IMU imu;
@@ -32,11 +43,16 @@ public class Drivetrain {
         // --- INITIALIZATION ---
 
         // Initialize drive motors from the hardware map
-        leftFront = hardwareMap.get(DcMotor.class, "lf");
-        leftBack = hardwareMap.get(DcMotor.class, "lr");
-        rightFront = hardwareMap.get(DcMotor.class, "rf");
-        rightBack = hardwareMap.get(DcMotor.class, "rr");
-        intake = hardwareMap.get(DcMotor.class, "intake");
+        leftFront = hardwareMap.get(DcMotor.class, "lf"); // left front motor
+        leftBack = hardwareMap.get(DcMotor.class, "lr"); // left rear motor
+        rightFront = hardwareMap.get(DcMotor.class, "rf"); // right front motor
+        rightBack = hardwareMap.get(DcMotor.class, "rr"); // right rear motor
+        intake = hardwareMap.get(DcMotor.class, "intake"); // intake motor
+        // Configure TS bellow on the bot
+        lowerFeeder = hardwareMap.get(CRServo.class, "lowerFeeder"); //  control port: 0
+        upperFeeder = hardwareMap.get(CRServo.class, "upperFeeder"); // control port: 1
+        leftFlywheel = hardwareMap.get(DcMotor.class, "leftFlywheel"); // left Flywheel motor extension 3 or 4
+        rightFlywheel = hardwareMap.get(DcMotor.class, "rightFlywheel"); // right Flywheel motor
 
 
         // Initialize the IMU from the hardware map
@@ -112,6 +128,22 @@ public class Drivetrain {
         leftBack.setPower(lb);
         rightFront.setPower(rf);
         rightBack.setPower(rb);
+    }
+
+
+    public void setFlywheelPower(double dih) {
+        leftFlywheel.setPower(-dih);
+        rightFlywheel.setPower(dih);
+    }
+    public void setFeederPower(double stayTunerBurger) {
+        lowerFeeder.setPower(stayTunerBurger);
+        upperFeeder.setPower(stayTunerBurger);
+    }
+
+    public void shootBall() {
+        setFlywheelPower(1.0);
+        lowerFeeder.setPower(1.0);
+        upperFeeder.setPower(1.0);
     }
 
     public void setIntakePower(double power) {
