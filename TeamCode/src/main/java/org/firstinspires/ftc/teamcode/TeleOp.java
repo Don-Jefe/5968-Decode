@@ -54,23 +54,26 @@ public class TeleOp extends LinearOpMode {
             double y = gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x;
             double rx = -gamepad1.right_stick_x;
+            Object rotation = gamepad1.right_stick_x * 1;
 
             // --- DRIVE THE ROBOT ---
             // Pass the joystick values and the current drive mode to the drivetrain object.
             drivetrain.drive(y, x, rx, isFieldCentric);
+            if (gamepad1.a) {
+                isFieldCentric = !isFieldCentric;
+            }
 
             // --- TELEMETRY ---
             telemetry.addData("Driving Mode", isFieldCentric ? "Field-Centric" : "Robot-Centric");
             telemetry.addLine("Press 'Y' to toggle mode.");
 
-            if (gamepad1.right_trigger >= 0.5) {
-                drivetrain.intakeIn();
-            } else if (gamepad1.left_trigger >= 0.5) {
+
+             if (gamepad1.left_trigger >= 0.5) {
                 drivetrain.intakeOut();
             } else {
                 drivetrain.intakeStop();
             }
-            if (gamepad1.right_bumper) {
+            if (gamepad1.right_trigger >= 0.5) {
                     drivetrain.setFlywheelPower(-1);
             } else{
                 drivetrain.setFlywheelPower(0);
@@ -79,7 +82,11 @@ public class TeleOp extends LinearOpMode {
             if (gamepad1.left_bumper) {
                 drivetrain.lowerFeeder.setPower(1);
                 drivetrain.upperFeeder.setPower(1);
-            } else {
+            } else if(gamepad1.right_bumper) {
+                drivetrain.lowerFeeder.setPower(-1);
+                drivetrain.upperFeeder.setPower(-1);
+            }
+            else {
                 drivetrain.setFeederPower(0);
             }
 

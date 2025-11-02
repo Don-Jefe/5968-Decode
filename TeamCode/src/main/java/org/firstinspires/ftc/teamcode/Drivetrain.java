@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -27,7 +29,7 @@ public class Drivetrain {
     public final CRServo lowerFeeder;
     public final CRServo upperFeeder;
 
-
+    Gamepad currentGamepad1 = new Gamepad();
     // Out-take Variables
     private final DcMotor rightFlywheel;
     private final DcMotor leftFlywheel;
@@ -35,10 +37,23 @@ public class Drivetrain {
     // IMU variable
     private final IMU imu;
 
+
+    private int eventsPerMotorRotation = 28;
+    private double wheelMotorRatio = 19.2;
+    private double eventsPerWheelRotation = eventsPerMotorRotation * wheelMotorRatio;
+    private double inchesPerWheelRotation = 12.3;
+    private double desiredHeadingDegrees = 0;
+    private double currentrx = 0;
+    private double currentRotation = 0;
+
+
     /**
      * Constructor to initialize the drivetrain.
      * @param hardwareMap The hardware map from the OpMode.
      */
+
+
+
     public Drivetrain(HardwareMap hardwareMap) {
         // --- INITIALIZATION ---
 
@@ -120,6 +135,80 @@ public class Drivetrain {
         setMotorPowers(leftFrontPower, leftBackPower, rightFrontPower, rightBackPower);
     }
 
+//    public void Drive(double sideways, double forward) {
+//        Drive(sideways, forward, 0, false);
+//    }
+
+    public double RotationNeededDegrees(){
+        double botHeadingDegrees = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double botRotationNeeded = desiredHeadingDegrees - botHeadingDegrees;
+        if (botRotationNeeded > 180) {botRotationNeeded = botRotationNeeded - 360;}
+        if (botRotationNeeded < -180) {botRotationNeeded = botRotationNeeded + 360;}
+        return botRotationNeeded;
+    }
+
+    public void Drive(double sideways, double forward, double rotation, boolean fieldCentric) {
+        double rx = rotation;
+        if (rotation != (double)0) {
+            currentRotation = Math.abs(rotation);
+        } else {
+            double botRotationNeeded = RotationNeededDegrees();
+            if (botRotationNeeded != (double)0) {
+                double botPitch = imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES);
+                if (botPitch <= 5) {
+                    rx = Math.min(1, (double)(Math.abs(botRotationNeeded)) / 90);
+                    rx = Math.min(rx, Math.abs(currentrx) + 0.1);
+                    if ((double)(Math.abs(botRotationNeeded)) >= 1) {rx = Math.max(rx, 0.15);}
+                    rx = Math.signum(botRotationNeeded) * -rx;
+                }
+            }
+        }
+        currentrx = rx;
+        double frontLeftPower = 0;
+        double backLeftPower = 0;
+        double frontRightPower = 0;
+        double backRightPower = 0;
+        if (fieldCentric) {
+            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            // Rotate the movement direction counter to the bot's rotation
+            double rotX = sideways * Math.cos(-botHeading) - forward * Math.sin(-botHeading);
+            double rotY = sideways * Math.sin(-botHeading) + forward * Math.cos(-botHeading);
+
+            rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+            frontLeftPower = (rotY + rotX + rx) / denominator;
+            backLeftPower = (rotY - rotX + rx) / denominator;
+            frontRightPower = (rotY - rotX - rx) / denominator;
+            backRightPower = (rotY + rotX - rx) / denominator;
+        } else {
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(forward) + Math.abs(sideways) + Math.abs(rx), 1);
+            frontLeftPower = (forward + sideways + rx) / denominator;
+            backLeftPower = (forward - sideways + rx) / denominator;
+            frontRightPower = (forward - sideways - rx) / denominator;
+            backRightPower = (forward + sideways - rx) / denominator;
+        }
+        leftFront.setPower(frontLeftPower);
+        rightFront.setPower(frontRightPower);
+        rightBack.setPower(backRightPower);
+        leftBack.setPower(backLeftPower);
+        if (currentRotation > 0) {
+            currentRotation -= 0.1;
+            SetHeading(CurrentHeading());
+        }
+    }
+    public void SetHeading(double desiredHeadingDegrees){
+        this.desiredHeadingDegrees = desiredHeadingDegrees;
+    }
+    public double CurrentHeading() {
+        return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+    }
     /**
      * Sets the power for each of the four drive motors.
      */
