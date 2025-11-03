@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
  * Controls the robot during driver operation using the Drivetrain subsystem.
  * Clean structure for easy reading and efficient control.
  */
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "(Jeff is dope and made the best TeleOp) Tele-Op")
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "(Decode - Tele-Op")
 public class TeleOp extends LinearOpMode {
 
     private final Gamepad currentGamepad1 = new Gamepad();
