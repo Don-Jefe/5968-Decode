@@ -64,7 +64,7 @@ public class RedShootTuah extends OpMode {
             case 0:
                 follower.followPath(movePath);
                 pathState = 1;
-                drivetrain.setFlywheelPower(-1);
+                drivetrain.setFlywheelPower(-0.55);
 
                 break;
 
@@ -79,10 +79,10 @@ public class RedShootTuah extends OpMode {
             case 2:
                 // Flywheel spins up for 3 seconds
                 if (pathTimer.getElapsedTimeSeconds() < 3)
-                    drivetrain.setFlywheelPower(-1);
+                    drivetrain.setFlywheelPower(-0.55);
                     // Feed balls for 2 seconds after spin-up (3s → 5s)
                 else if (pathTimer.getElapsedTimeSeconds() < 10) {
-                    drivetrain.setFlywheelPower(-0.7);
+                    drivetrain.setFlywheelPower(-0.55);
                     drivetrain.setFeederPower(1);
                     drivetrain.intakeOut();
                 }

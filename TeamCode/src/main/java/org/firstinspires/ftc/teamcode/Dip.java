@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-@Autonomous(name = "Blue Shoot Tuah", group = "Examples")
-public class AutoSigma extends OpMode {
+@Autonomous(name = "out of the way!", group = "Examples")
+public class Dip extends OpMode {
 
     private boolean isRedAlliance = false;
     private Drivetrain drivetrain;
@@ -20,7 +20,7 @@ public class AutoSigma extends OpMode {
     private int pathState;
 
     // Starting pose at origin, facing 0°
-    private final Pose startPose = new Pose(85, 0, Math.toRadians(0));
+    private final Pose startPose = new Pose(25, 0, Math.toRadians(0));
 
     // Move forward to shooting position
     private final Pose targetPose = new Pose(0, 0, Math.toRadians(45));
@@ -64,7 +64,7 @@ public class AutoSigma extends OpMode {
             case 0:
                 follower.followPath(movePath);
                 pathState = 1;
-                drivetrain.setFlywheelPower(-.55);
+                drivetrain.setFlywheelPower(-1);
 
                 break;
 
@@ -79,10 +79,10 @@ public class AutoSigma extends OpMode {
             case 2:
                 // Flywheel spins up for 3 seconds
                 if (pathTimer.getElapsedTimeSeconds() < 3)
-                    drivetrain.setFlywheelPower(-0.55);
+                    drivetrain.setFlywheelPower(-0.7);
                     // Feed balls for 2 seconds after spin-up (3s → 5s)
                 else if (pathTimer.getElapsedTimeSeconds() < 10) {
-                    drivetrain.setFlywheelPower(-0.55);
+                    drivetrain.setFlywheelPower(-1);
                     drivetrain.setFeederPower(1);
                     drivetrain.intakeOut();
                 }
