@@ -3,11 +3,11 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Decode - aura-Tele-Op")
-public class TeleOp extends LinearOpMode {
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Decode - Git Tele-Op")
+public class GitTele extends LinearOpMode {
 
     private Drivetrain drivetrain;
-    private double shootingPower = -3420; // -.67
+    private double shootingPower = -3340; // -.67
     // ideal close is -3340
 
     private boolean isFieldCentric = false;
@@ -37,10 +37,6 @@ public class TeleOp extends LinearOpMode {
         // Wait for start
         waitForStart();
         if (isStopRequested()) return;
-
-        // -------------------------------
-        // MAIN LOOP
-        // -------------------------------
         drivetrain.blocker.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         drivetrain.blocker.setPower(-1);
         sleep(500);
@@ -54,7 +50,9 @@ public class TeleOp extends LinearOpMode {
         drivetrain.blocker.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         drivetrain.blocker.setPower(0.5);
         sleep(500);
-
+        // -------------------------------
+        // MAIN LOOP
+        // -------------------------------
         while (opModeIsActive()) {
 
             // -------------------------------
@@ -70,31 +68,19 @@ public class TeleOp extends LinearOpMode {
             // -------------------------------
             // FIELD-CENTRIC TOGGLE (A)
             // -------------------------------
+            if(controllerIsRed) {
+                gamepad1.setLedColor(255,0,0,30000);
+            } else gamepad1.setLedColor(0,0,255,30000);
 
-
-            if (gamepad1.touchpadWasPressed()) {
-                shootingPower = -4540;
-            } else if(gamepad1.psWasPressed()) {
-                shootingPower = -3380;
-            }
+            controllerIsRed = gamepad1.psWasPressed() && !controllerIsRed;
 
             // -------------------------------
             // INTAKE CONTROL
             // -------------------------------
-            if (gamepad1.left_trigger > 0.5 ) {
+            if (gamepad1.left_trigger > 0.5 || gamepad1.right_bumper ) {
                 drivetrain.intakeOut();
             } else {
-               drivetrain.intakeStop();
-            }
-            if (gamepad1.right_bumper) {
-                drivetrain.closeShoot();
-            } else {
-                drivetrain.stopShoot();
-            }
-            if (gamepad1.left_bumper) {
-                drivetrain.openShoot();
-            } else {
-                drivetrain.stopShoot();
+                drivetrain.intakeStop();
             }
 
             // -------------------------------
@@ -106,7 +92,13 @@ public class TeleOp extends LinearOpMode {
             } else if (gamepad1.aWasPressed()) {
                 drivetrain.setFlywheelRPM(0);
             }
-
+            if (gamepad1.dpad_left) {
+                drivetrain.openShoot();
+            } else if (gamepad1.dpad_right) {
+                drivetrain.closeShoot();
+            } else {
+                drivetrain.stopShoot();
+            }
 
 
             // -------------------------------

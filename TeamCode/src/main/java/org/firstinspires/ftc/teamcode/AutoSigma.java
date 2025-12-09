@@ -12,9 +12,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 
@@ -71,6 +71,20 @@ public class AutoSigma extends OpMode {
         lastPath = new Path(new BezierLine(targetPose, endPose));
         lastPath.setLinearHeadingInterpolation(targetPose.getHeading(), endPose.getHeading());
     }
+    @Override
+    public void init_loop() {
+
+        // Determine alliance from gamepad input
+        if (gamepad1.a) {
+            isRedAlliance = false; // Blue
+        } else if (gamepad1.b) {
+            isRedAlliance = true; // Red
+        }
+
+        // Update telemetry
+        telemetry.addData("Alliance Selected", isRedAlliance ? "Red" : "Blue");
+        telemetry.update();
+    }
 
 
     @Override
@@ -91,7 +105,7 @@ public class AutoSigma extends OpMode {
         switch (pathState) {
             case 0:
                 follower.followPath(movePath);
-                pathState = 1;
+                pathState = -1;
 //                drivetrain.setFlywheelPower(-.55);
 
                 break;
