@@ -64,7 +64,7 @@ public class Dip extends OpMode {
             case 0:
                 follower.followPath(movePath);
                 pathState = 1;
-                drivetrain.setFlywheelPower(-1);
+//                drivetrain.setFlywheelPower(-1);
 
                 break;
 
@@ -78,18 +78,20 @@ public class Dip extends OpMode {
 
             case 2:
                 // Flywheel spins up for 3 seconds
-                if (pathTimer.getElapsedTimeSeconds() < 3)
-                    drivetrain.setFlywheelPower(-0.7);
+                if (pathTimer.getElapsedTimeSeconds() < 3) {
+
+                }
+//                    drivetrain.setFlywheelPower(-0.7);
                     // Feed balls for 2 seconds after spin-up (3s → 5s)
                 else if (pathTimer.getElapsedTimeSeconds() < 10) {
-                    drivetrain.setFlywheelPower(-1);
-                    drivetrain.setFeederPower(1);
+//                    drivetrain.setFlywheelPower(-1);
+//                    drivetrain.setFeederPower(1);
                     drivetrain.intakeOut();
                 }
                 // Stop shooter after 5 seconds
                 else {
-                    drivetrain.setFlywheelPower(0);
-                    drivetrain.setFeederPower(0);
+//                    drivetrain.setFlywheelPower(0);
+//                    drivetrain.setFeederPower(0);
                     drivetrain.intakeStop();
 
                     // Start next movement
@@ -116,8 +118,8 @@ public class Dip extends OpMode {
 
     @Override
     public void stop() {
-        drivetrain.setFeederPower(0);
-        drivetrain.setFlywheelPower(0);
+//        drivetrain.setFeederPower(0);
+//        drivetrain.setFlywheelPower(0);
         drivetrain.setIntakePower(0);
     }
 }
