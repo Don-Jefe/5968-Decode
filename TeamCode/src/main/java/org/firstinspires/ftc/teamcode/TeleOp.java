@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -73,9 +75,9 @@ public class TeleOp extends LinearOpMode {
 
 
             if (gamepad1.touchpadWasPressed()) {
-                shootingPower = -4540;
+                shootingPower = CF.FarRPM;
             } else if(gamepad1.psWasPressed()) {
-                shootingPower = -3380;
+                shootingPower = CF.CloseRPM;
             }
 
             // -------------------------------
