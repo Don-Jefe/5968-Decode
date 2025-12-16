@@ -16,7 +16,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(5.398);
+            .mass(9.7)
+            ;
             // update with the mass of the robot
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
@@ -41,8 +42,8 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(3.625)
-            .strafePodX(-5.75)
+            .forwardPodY(0)
+            .strafePodX(-0)
             // See attached https://pedropathing.com/_next/static/media/odometry.528df183.png
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
