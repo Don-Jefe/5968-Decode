@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -22,8 +23,14 @@ public class Drivetrain {
     // Subsystems
     private final DcMotor intake;
 
+    //DCMtorEx is awesome and can do set RPM and set velocity function very useful for flywheel
+    private final DcMotorEx flywheel;
+
     // Sensors
     private final IMU imu;
+
+    // there are 28 encoder ticks in per revolution for the 6k rpm motors
+    private static final double TICKS_PER_REV = 28.0;
 
     public Drivetrain(HardwareMap hardwareMap) {
         // Initialize drive motors
@@ -31,6 +38,7 @@ public class Drivetrain {
         leftBack = hardwareMap.get(DcMotor.class, "lr");
         rightFront = hardwareMap.get(DcMotor.class, "rf");
         rightBack = hardwareMap.get(DcMotor.class, "rr");
+        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
 
         // Subsystems
         intake = hardwareMap.get(DcMotor.class, "intake");
@@ -77,11 +85,7 @@ public class Drivetrain {
         setMotorPowers(lf, lb, rf, rb);
     }
 
-    /**
-     * Toggles field-centric mode and returns the new state.
-     * @param currentState Current field-centric state
-     * @return New field-centric state
-     */
+
     public boolean toggleFieldCentric(boolean currentState) {
         return !currentState;  // Simple toggle
     }
@@ -102,6 +106,11 @@ public class Drivetrain {
         for (DcMotor motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
+    }
+
+    public void setFlywheelRPM(double rpm) {
+        double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
+        flywheel.setVelocity(ticksPerSecond);
     }
 
     // Intake control
