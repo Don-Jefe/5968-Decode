@@ -8,6 +8,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+/**
+ * Drivetrain class for a mecanum-drive robot.
+ * Handles motor control, IMU orientation, and subsystems (intake).
+ */
 public class Drivetrain {
 
     // Drive motors
@@ -17,74 +21,62 @@ public class Drivetrain {
     private final DcMotor rightBack;
 
     // Subsystems
-    public final DcMotor intake;
-    public final DcMotor feeder;
-    private final DcMotorEx flywheel;
+    private final DcMotor intake;
 
-    // Shooter blocker
-    public final DcMotor blocker;
+    //DCMtorEx is awesome and can do set RPM and set velocity function very useful for flywheel
+    private final DcMotorEx flywheel;
 
     // Sensors
     private final IMU imu;
 
-    public Drivetrain(HardwareMap hardwareMap) {
+    // there are 28 encoder ticks in per revolution for the 6k rpm motors
+    private static final double TICKS_PER_REV = 28.0;
 
+    public Drivetrain(HardwareMap hardwareMap) {
         // Initialize drive motors
         leftFront = hardwareMap.get(DcMotor.class, "lf");
         leftBack = hardwareMap.get(DcMotor.class, "lr");
         rightFront = hardwareMap.get(DcMotor.class, "rf");
         rightBack = hardwareMap.get(DcMotor.class, "rr");
+        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
 
         // Subsystems
         intake = hardwareMap.get(DcMotor.class, "intake");
-        feeder = hardwareMap.get(DcMotor.class, "feeder");
-        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        blocker = hardwareMap.get(DcMotor.class, "blocker");
+
+        // IMU setup
+        imu = hardwareMap.get(IMU.class, "imu");
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP
+        ));
+        imu.initialize(parameters);
 
         // Motor directions
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // IMU setup
-        imu = hardwareMap.get(IMU.class, "imu");
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
-        )));
-
-        // Braking mode for cleaner control
-        setBrakeMode(leftFront, leftBack, rightFront, rightBack, intake, feeder, blocker);
-
-        // -------------------------
-        // SHOOTER BLOCKER FIX
-        // -------------------------
-        blocker.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        // Always begin in RUN_TO_POSITION after TeleOp resets it
-        blocker.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        blocker.setTargetPosition(33);
-        blocker.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        blocker.setPower(0.5); // hold the closed position
-
+        // Set brake mode
+        setBrakeMode(leftFront, leftBack, rightFront, rightBack, intake);
     }
 
-    // ------------------ DRIVE ------------------
-
+    /**
+     * Standard mecanum drive method.
+     * @param y Forward/backward input (-1 to 1)
+     * @param x Strafe input (-1 to 1)
+     * @param rx Rotation input (-1 to 1)
+     * @param isFieldCentric Enables field-centric control if true
+     * Field Centric does not work and the code is garbage
+     */
     public void drive(double y, double x, double rx, boolean isFieldCentric) {
-
         if (isFieldCentric) {
             double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-            // Correct field-oriented math
-            double rotX = x * Math.cos(heading) + y * Math.sin(heading);
-            double rotY = -x * Math.sin(heading) + y * Math.cos(heading);
-
+            double rotX = x * Math.cos(-heading) - y * Math.sin(-heading);
+            double rotY = x * Math.sin(-heading) + y * Math.cos(-heading);
             x = rotX;
             y = rotY;
         }
 
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-
         double lf = (y + x + rx) / denominator;
         double lb = (y - x + rx) / denominator;
         double rf = (y - x - rx) / denominator;
@@ -93,15 +85,17 @@ public class Drivetrain {
         setMotorPowers(lf, lb, rf, rb);
     }
 
+
+    public boolean toggleFieldCentric(boolean currentState) {
+        return !currentState;  // Simple toggle
+    }
+
     public void resetIMU() {
         imu.resetYaw();
     }
 
-    public boolean toggleFieldCentric(boolean currentState) {
-        return !currentState;
-    }
-
-    private void setMotorPowers(double lf, double lb, double rf, double rb) {
+    // Motor control helpers
+    public void setMotorPowers(double lf, double lb, double rf, double rb) {
         leftFront.setPower(lf);
         leftBack.setPower(lb);
         rightFront.setPower(rf);
@@ -114,24 +108,12 @@ public class Drivetrain {
         }
     }
 
-    // ------------------ SHOOTER ------------------
-
-    public void openShoot() {
-        blocker.setTargetPosition(350); // open fully
-        blocker.setPower(1);
+    public void setFlywheelRPM(double rpm) {
+        double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
+        flywheel.setVelocity(ticksPerSecond);
     }
 
-    public void closeShoot() {
-        blocker.setTargetPosition(140);   // closed
-        blocker.setPower(1);
-    }
-
-    public void stopShoot() {
-        blocker.setPower(0);
-    }
-
-    // ------------------ SUBSYSTEMS ------------------
-
+    // Intake control
     public void setIntakePower(double power) {
         intake.setPower(power);
     }
@@ -143,26 +125,4 @@ public class Drivetrain {
     public void intakeStop() {
         setIntakePower(0);
     }
-
-    public void setFeederPower(double power) {
-        feeder.setPower(power);
-    }
-
-    public void setFlywheelPower(double power) {
-        flywheel.setPower(power);
-    }
-
-    public void setFlywheelRPM(double rpm) {
-        // Convert RPM → ticks per second
-        double ticksPerSecond = (rpm / 60.0) * 28.0;
-
-        // Ensure motor is in correct mode
-        if (flywheel.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-
-        // Set the velocity (ticks/second)
-        flywheel.setVelocity(ticksPerSecond);
-    }
-
 }
