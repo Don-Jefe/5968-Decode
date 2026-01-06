@@ -37,9 +37,25 @@ public class TeleOp extends LinearOpMode {
 
             // Intake control
             if (gamepad1.left_trigger > 0.5) {
-                drivetrain.intakeOut();
+                drivetrain.setIntakePower(0.8);
             } else {
-                drivetrain.intakeStop();
+                drivetrain.setIntakePower(0);
+            }
+
+            if (gamepad1.leftBumperWasPressed() && drivetrain.getBlockerAngle() == drivetrain.SERVO_TOP_POS)
+            {
+                drivetrain.setBlockerAngle(drivetrain.SERVO_Bottom_POS);
+            } else
+            {
+                drivetrain.setBlockerAngle(drivetrain.SERVO_TOP_POS);
+            }
+
+            if (gamepad1.rightBumperWasPressed())
+            {
+                drivetrain.setFlywheelRPM(CF.CloseRPM);
+            } else
+            {
+                drivetrain.setFlywheelRPM(0);
             }
 
             // Telemetry

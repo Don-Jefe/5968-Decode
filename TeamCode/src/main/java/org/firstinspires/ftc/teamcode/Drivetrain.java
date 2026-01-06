@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
@@ -19,18 +21,25 @@ public class Drivetrain {
     private final DcMotor leftBack;
     private final DcMotor rightFront;
     private final DcMotor rightBack;
+    private final DcMotorEx flywheel;
+    private final DcMotor feeder;
+    private final Servo blocker;
 
     // Subsystems
     private final DcMotor intake;
 
     //DCMtorEx is awesome and can do set RPM and set velocity function very useful for flywheel
-    private final DcMotorEx flywheel;
+  //  private final DcMotorEx flywheel;
 
     // Sensors
     private final IMU imu;
 
     // there are 28 encoder ticks in per revolution for the 6k rpm motors
     private static final double TICKS_PER_REV = 28.0;
+    public final double SERVO_TOP_POS = 100;
+    public final double SERVO_Bottom_POS = 0;
+
+    private double angle = 0;
 
     public Drivetrain(HardwareMap hardwareMap) {
         // Initialize drive motors
@@ -39,6 +48,9 @@ public class Drivetrain {
         rightFront = hardwareMap.get(DcMotor.class, "rf");
         rightBack = hardwareMap.get(DcMotor.class, "rr");
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        feeder = hardwareMap.get(DcMotor.class, "feeder");
+
+        blocker = hardwareMap.get(Servo.class, "blocker");
 
         // Subsystems
         intake = hardwareMap.get(DcMotor.class, "intake");
@@ -56,7 +68,7 @@ public class Drivetrain {
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set brake mode
-        setBrakeMode(leftFront, leftBack, rightFront, rightBack, intake);
+        setBrakeMode(leftFront, leftBack, rightFront, rightBack, intake,feeder);
     }
 
     /**
@@ -89,6 +101,17 @@ public class Drivetrain {
     public boolean toggleFieldCentric(boolean currentState) {
         return !currentState;  // Simple toggle
     }
+    public void setFeederToPosition() {
+        feeder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        feeder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        feeder.setTargetPosition(0);
+        feeder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        feeder.setPower(0);
+    }
+    public void setFeederToPower() {
+        feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        feeder.setPower(0);
+    }
 
     public void resetIMU() {
         imu.resetYaw();
@@ -110,19 +133,30 @@ public class Drivetrain {
 
     public void setFlywheelRPM(double rpm) {
         double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
-        flywheel.setVelocity(ticksPerSecond);
+       flywheel.setVelocity(ticksPerSecond);
     }
+
+    public void setFeederPower(double seanIsFat) {
+        feeder.setPower(seanIsFat);
+    }
+    public void setFeederPosition(int pos){
+        feeder.setTargetPosition(pos);
+    }
+
+    public double getBlockerAngle()
+    {
+        return blocker.getPosition() * 360;
+    }
+    public void setBlockerAngle(double angle) {
+        blocker.setPosition(angle/360);
+    }
+
+
+
 
     // Intake control
     public void setIntakePower(double power) {
         intake.setPower(power);
     }
 
-    public void intakeOut() {
-        setIntakePower(-1);
-    }
-
-    public void intakeStop() {
-        setIntakePower(0);
-    }
 }
