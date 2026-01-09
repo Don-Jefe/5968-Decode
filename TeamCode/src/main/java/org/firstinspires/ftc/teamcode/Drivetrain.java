@@ -4,6 +4,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -150,6 +151,39 @@ public class Drivetrain {
     public void setBlockerAngle(double angle) {
         blocker.setPosition(angle/360);
     }
+    public void updateFeeder(Gamepad gamepad) {
+        if (gamepad.right_trigger > 0.5) {
+            setFeederPower(0.8);
+        } else if (gamepad.left_trigger > 0.5) {
+            setFeederPower(-0.8);
+        } else {
+            setFeederPower(0);
+        }
+    }
+    public void updateFlywheel(Gamepad gamepad) {
+        if (gamepad.rightBumperWasPressed()) {
+            setFlywheelRPM(CF.CloseRPM);
+        } else {
+            setFlywheelRPM(0);
+        }
+    }
+    public void updateBlocker(Gamepad gamepad) {
+        if (gamepad.leftBumperWasPressed()) {
+            toggleBlocker();
+        }
+    }
+
+    private void toggleBlocker() {
+        if (getBlockerAngle() == SERVO_TOP_POS) {
+            setBlockerAngle(SERVO_Bottom_POS);
+        } else {
+            setBlockerAngle(SERVO_TOP_POS);
+        }
+    }
+    public void updateIntake(double trigger) {
+        setIntakePower(trigger > 0.5 ? 0.8 : 0);
+    }
+
 
 
 
