@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.NotOpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
@@ -9,8 +9,11 @@ public class CF {
     // ======================================================================
     //  TELEOP VARS
     // ======================================================================
-    public static int CloseRPM = -3380;
-    public static int FarRPM = -4540;
+    public static int CloseRPM = -2800;
+    public static int FarRPM = -3200;
+
+    public static final double SERVO_TOP_POS = .45;
+    public static final double SERVO_BOTTOM_POS = 0.76;
 
     public static  double intakePower = 0.6;
 

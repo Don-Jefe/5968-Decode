@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.NotOpModes;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -22,10 +22,11 @@ public class Drivetrain {
     private final DcMotor leftBack;
     private final DcMotor rightFront;
     private final DcMotor rightBack;
-    private final DcMotorEx flywheel;
+    public final DcMotorEx flywheel;
     private final DcMotor feeder;
-    private final Servo blocker;
+    public final Servo blocker;
 
+   public double feedPower = 0.5;
     // Subsystems
     private final DcMotor intake;
 
@@ -37,8 +38,11 @@ public class Drivetrain {
 
     // there are 28 encoder ticks in per revolution for the 6k rpm motors
     private static final double TICKS_PER_REV = 28.0;
-    public final double SERVO_TOP_POS = 100;
-    public final double SERVO_Bottom_POS = 0;
+    public static final double SERVO_TOP_POS = .41;
+    public static final double SERVO_BOTTOM_POS = 0.75;
+    public static final double GOONER_POS = 0.67;
+
+    private boolean blockerUp = false;
 
     private double angle = 0;
 
@@ -102,17 +106,8 @@ public class Drivetrain {
     public boolean toggleFieldCentric(boolean currentState) {
         return !currentState;  // Simple toggle
     }
-    public void setFeederToPosition() {
-        feeder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        feeder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        feeder.setTargetPosition(0);
-        feeder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        feeder.setPower(0);
-    }
-    public void setFeederToPower() {
-        feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        feeder.setPower(0);
-    }
+
+
 
     public void resetIMU() {
         imu.resetYaw();
@@ -125,6 +120,8 @@ public class Drivetrain {
         rightFront.setPower(rf);
         rightBack.setPower(rb);
     }
+
+
 
     private void setBrakeMode(DcMotor... motors) {
         for (DcMotor motor : motors) {
@@ -144,18 +141,14 @@ public class Drivetrain {
         feeder.setTargetPosition(pos);
     }
 
-    public double getBlockerAngle()
-    {
-        return blocker.getPosition() * 360;
-    }
-    public void setBlockerAngle(double angle) {
-        blocker.setPosition(angle/360);
-    }
+
     public void updateFeeder(Gamepad gamepad) {
-        if (gamepad.right_trigger > 0.5) {
-            setFeederPower(0.8);
+        if (gamepad.right_trigger > 0.3) {
+            setFeederPower(1);
         } else if (gamepad.left_trigger > 0.5) {
-            setFeederPower(-0.8);
+            setFeederPower(0.5);
+        } else if (gamepad.triangle) {
+            setFeederPower(0.9);
         } else {
             setFeederPower(0);
         }
@@ -163,25 +156,30 @@ public class Drivetrain {
     public void updateFlywheel(Gamepad gamepad) {
         if (gamepad.rightBumperWasPressed()) {
             setFlywheelRPM(CF.CloseRPM);
-        } else {
+        } else if (gamepad.leftBumperWasPressed()) {
             setFlywheelRPM(0);
         }
     }
     public void updateBlocker(Gamepad gamepad) {
-        if (gamepad.leftBumperWasPressed()) {
-            toggleBlocker();
+//        if (gamepad.circleWasPressed()) {
+//            blockerUp = !blockerUp;
+//            feedPower = (feedPower == 0.9 ? 0.9 : 0.5);
+//            blocker.setPosition(blockerUp ? SERVO_TOP_POS : SERVO_BOTTOM_POS);
+//
+//        }
+        if (gamepad.right_trigger > 0.5) {
+            blocker.setPosition(SERVO_BOTTOM_POS);
+        } else {
+            blocker.setPosition(SERVO_TOP_POS);
         }
     }
 
-    private void toggleBlocker() {
-        if (getBlockerAngle() == SERVO_TOP_POS) {
-            setBlockerAngle(SERVO_Bottom_POS);
-        } else {
-            setBlockerAngle(SERVO_TOP_POS);
-        }
-    }
+
     public void updateIntake(double trigger) {
-        setIntakePower(trigger > 0.5 ? 0.8 : 0);
+        setIntakePower(trigger > 0.5 ? -1 : 0);
+    }
+    public void updateIntakeX(double trigger) {
+        setIntakePower(trigger > 0.5 ? 1 : 0);
     }
 
 
@@ -193,4 +191,7 @@ public class Drivetrain {
         intake.setPower(power);
     }
 
+    public void setFlywheelPower(double v) {
+
+    }
 }
