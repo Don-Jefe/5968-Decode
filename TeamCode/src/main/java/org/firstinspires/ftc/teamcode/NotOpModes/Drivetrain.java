@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -132,6 +133,12 @@ public class Drivetrain {
     public void setFlywheelRPM(double rpm) {
         double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
        flywheel.setVelocity(ticksPerSecond);
+    }
+    public PIDFCoefficients getFlywheelPID() {
+        return flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    public void NewSetFlywheelRPM(double rpm, double p, double i, double d, double k) {
+
     }
 
     public void setFeederPower(double seanIsFat) {
