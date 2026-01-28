@@ -14,6 +14,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+
+//12 ball sick
 @Configurable
 @Autonomous(name = "Big Red Booti")
 public class RED extends OpMode {
