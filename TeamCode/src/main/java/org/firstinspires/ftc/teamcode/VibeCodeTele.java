@@ -13,8 +13,8 @@ import org.firstinspires.ftc.teamcode.NotOpModes.CF;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 
 @Configurable
-@TeleOp(name = "Jeff's Aimbot Tele")
-public class DecodeTele extends OpMode {
+@TeleOp(name = "Jeff's VIbecode Tele")
+public class VibeCodeTele extends OpMode {
 
     /* =========================
        FIELD CONSTANTS
@@ -37,14 +37,6 @@ public class DecodeTele extends OpMode {
     public static double AIM_DELAY_SEC = 0.30;
 
     /* =========================
-       FLYWHEEL RPM CONSTANTS
-       ========================= */
-    public static double MIN_SHOT_DISTANCE = 55;   // in inches
-    public static double MAX_SHOT_DISTANCE = 135.0;  // in inches
-    public static double MIN_FLYWHEEL_RPM = 2500;
-    public static double MAX_FLYWHEEL_RPM = 3075;
-
-    /* =========================
        HARDWARE
        ========================= */
     private Follower follower;
@@ -63,6 +55,16 @@ public class DecodeTele extends OpMode {
        ========================= */
     private final ElapsedTime aimTimer = new ElapsedTime();
     private boolean wasAimbotActive = false;
+
+    /* =========================
+       NEW FLYWHEEL RAMP
+       ========================= */
+    private double targetRPM = 0;
+    private double rampedRPM = 0;
+    private double lastLoopTime = 0;
+
+    public static double RPM_ACCEL = 3000;
+    public static double RPM_DECEL = 9000;
 
     /* =========================
        HELPER METHODS
@@ -88,10 +90,10 @@ public class DecodeTele extends OpMode {
     private void updateAllianceTarget() {
         if (isBlueAlliance) {
             targetX = 8;
-            targetY = FIELD_SIZE-8;
+            targetY = FIELD_SIZE - 8;
         } else {
-            targetX = FIELD_SIZE-8;
-            targetY = FIELD_SIZE-8;
+            targetX = FIELD_SIZE - 8;
+            targetY = FIELD_SIZE - 8;
         }
     }
 
@@ -106,15 +108,25 @@ public class DecodeTele extends OpMode {
 
     private double getFlywheelRPMForDistance(double distance) {
         distance = clamp(distance, CF.MIN_SHOT_DISTANCE, CF.MAX_SHOT_DISTANCE);
-        double t = (distance - CF.MIN_SHOT_DISTANCE) / (CF.MAX_SHOT_DISTANCE - CF.MIN_SHOT_DISTANCE);
+        double t = (distance - CF.MIN_SHOT_DISTANCE) /
+                (CF.MAX_SHOT_DISTANCE - CF.MIN_SHOT_DISTANCE);
         return CF.MIN_FLYWHEEL_RPM + t * (CF.MAX_FLYWHEEL_RPM - CF.MIN_FLYWHEEL_RPM);
     }
+
     private double getActualFlywheelRPM() {
-        // encoder velocity is ticks per second
         double ticksPerSecond = drivetrain.flywheel.getVelocity();
-        return (ticksPerSecond / 24) * 60.0;
+        return (ticksPerSecond / 28.0) * 60.0;
     }
 
+    private void updateFlywheelRamp(double dt) {
+        if (rampedRPM < targetRPM) {
+            rampedRPM += RPM_ACCEL * dt;
+            if (rampedRPM > targetRPM) rampedRPM = targetRPM;
+        } else {
+            rampedRPM -= RPM_DECEL * dt;
+            if (rampedRPM < targetRPM) rampedRPM = targetRPM;
+        }
+    }
 
     /* =========================
        INIT
@@ -134,6 +146,7 @@ public class DecodeTele extends OpMode {
     @Override
     public void start() {
         follower.startTeleopDrive();
+        lastLoopTime = getRuntime();
     }
 
     /* =========================
@@ -168,28 +181,36 @@ public class DecodeTele extends OpMode {
            ========================= */
         boolean aimbotActive = gamepad1.right_trigger > 0.5;
 
-        // detect rising edge
         if (aimbotActive && !wasAimbotActive) {
             aimTimer.reset();
         }
         wasAimbotActive = aimbotActive;
 
         double forward = -gamepad1.left_stick_y;
-        double strafe  = -gamepad1.left_stick_x;
+        double strafe = -gamepad1.left_stick_x;
         double turn = aimbotActive ? getTurnToTarget(pose) : -gamepad1.right_stick_x;
 
         follower.setTeleOpDrive(forward, strafe, turn, true);
 
         /* =========================
-           CALCULATE DISTANCE AND RPM
+           TARGET RPM
            ========================= */
         double distance = getDistanceToBasket(pose);
-        double targetRPM = getFlywheelRPMForDistance(distance);
-
-
+        targetRPM = getFlywheelRPMForDistance(distance);
 
         /* =========================
-           MECHANISMS (INTAKE / FEEDER)
+           RAMP
+           ========================= */
+        double now = getRuntime();
+        double dt = now - lastLoopTime;
+        lastLoopTime = now;
+
+        updateFlywheelRamp(dt);
+
+        drivetrain.NewSetFlywheelRPM(-rampedRPM, CF.PPP, 0, 0, CF.FFF);
+
+        /* =========================
+           MECHANISMS (UNCHANGED)
            ========================= */
         if (aimbotActive && aimTimer.seconds() >= AIM_DELAY_SEC) {
             drivetrain.setIntakePower(-1);
@@ -200,10 +221,8 @@ public class DecodeTele extends OpMode {
         }
 
         drivetrain.updateBlocker(gamepad1);
-        drivetrain.updateFlywheel(gamepad1);
         drivetrain.updateIntake(gamepad1.left_trigger);
         drivetrain.updateFeeder(gamepad1);
-        drivetrain.NewSetFlywheelRPM(-targetRPM, CF.PPP, 0.0, 0, CF.FFF);
 
         /* =========================
            TELEMETRY
@@ -213,9 +232,9 @@ public class DecodeTele extends OpMode {
         telemetryM.debug("Heading (deg)", Math.toDegrees(pose.getHeading()));
         telemetryM.debug("Distance to basket (in)", distance);
         telemetryM.debug("Target Flywheel RPM", targetRPM);
+        telemetryM.debug("Ramped RPM", rampedRPM);
         telemetryM.debug("Actual Flywheel RPM", getActualFlywheelRPM());
         telemetryM.debug("Aimbot Active", aimbotActive);
         telemetryM.debug("Aim Timer (s)", aimTimer.seconds());
-
     }
 }

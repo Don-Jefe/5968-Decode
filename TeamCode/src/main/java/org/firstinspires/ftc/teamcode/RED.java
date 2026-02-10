@@ -386,9 +386,9 @@ public class RED extends OpMode {
             END = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(87.679, 86.903),
-                                    new Pose(95.437, 13.541)
+                                    new Pose(95.437, 60.541)
                             )
-                    ).setTangentHeadingInterpolation()
+                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
 
                     .build();
         }

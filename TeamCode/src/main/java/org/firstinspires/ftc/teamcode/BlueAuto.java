@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Autonomous(name = "Big Blue Booti")
 public class BlueAuto extends OpMode {
 
-    double maxp = 0.9;
+    double maxp = 0.91;
 
     /* =========================
        STATE MACHINE
@@ -126,7 +126,7 @@ public class BlueAuto extends OpMode {
             case TO_PICK_1_START:
                 if (!follower.isBusy()) {
                     setPickupState();
-                    follower.setMaxPower(.4);
+                    follower.setMaxPower(.5);
                     follower.followPath(paths.PickEnd1);
                     state = AutoState.PICK_1;
                 }
@@ -164,7 +164,7 @@ public class BlueAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     setPickupState();
-                    follower.setMaxPower(.25);
+                    follower.setMaxPower(.32);
                     follower.followPath(paths.PickEnd2);
                     state = AutoState.PICK_2;
 
@@ -227,7 +227,7 @@ public class BlueAuto extends OpMode {
                 break;
 
             case SHOOT_4:
-                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2.5) {
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2) {
                     setPickupState();
                     follower.followPath(paths.END);
                     state = AutoState.PARK;
@@ -260,7 +260,7 @@ public class BlueAuto extends OpMode {
 
     private void setPickupState() {
         drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-        drivetrain.setIntakePower(-.75);
+        drivetrain.setIntakePower(-15);
         drivetrain.setFeederPower(0.6);
     }
 
@@ -342,7 +342,7 @@ public class BlueAuto extends OpMode {
             PickEnd2 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(47.993, 57.000),
-                                    new Pose(15, 57.00)
+                                    new Pose(12, 57.00)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .setVelocityConstraint(0.25)
@@ -351,7 +351,7 @@ public class BlueAuto extends OpMode {
 
             Shooting3 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(15, 58.826),
+                                    new Pose(12, 58.826),
                                     new Pose(56.635, 86.983)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
@@ -389,9 +389,9 @@ public class BlueAuto extends OpMode {
             END = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(56.321, 86.903),
-                                    new Pose(48.563, 13.541)
+                                    new Pose(48.563, 60.541)
                             )
-                    ).setTangentHeadingInterpolation()
+                    ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(135))
                     .build();
         }
     }

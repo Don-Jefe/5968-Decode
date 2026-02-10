@@ -144,10 +144,7 @@ public class Drivetrain {
         flywheel.setPIDFCoefficients(
                 DcMotor.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(p, i, d, f)
-                //p 10
-                // i 3
-                // d 0
-                //
+
         );
 
         setFlywheelRPM(rpm);
@@ -198,7 +195,7 @@ public class Drivetrain {
 
 
     public void updateIntake(double trigger) {
-        setIntakePower(trigger > 0.5 ? -1 : 0);
+        setIntakePower(trigger > 0.5 ? -.9 : 0);
     }
     public void updateIntakeX(double trigger) {
         setIntakePower(trigger > 0.5 ? 1 : 0);
