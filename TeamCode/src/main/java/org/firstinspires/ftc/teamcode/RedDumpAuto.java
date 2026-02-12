@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -14,11 +15,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-
-//12 ball sick
 @Configurable
-@Autonomous(name = "Big Red - 12 Ball")
-public class RED extends OpMode {
+@Autonomous(name = "Red Dump Auto - 9 Ball")
+public class RedDumpAuto extends OpMode {
 
     double maxp = 0.9;
 
@@ -26,6 +25,8 @@ public class RED extends OpMode {
        STATE MACHINE
        ========================= */
     private enum AutoState {
+        PRE_DIDDY,
+
         SHOOT_1,
         TO_PICK_1_START,
         PICK_1,
@@ -34,20 +35,12 @@ public class RED extends OpMode {
         TO_PICK_2_START,
         PICK_2,
 
+        DUMP,
+        PRE_SHOOT_3,
         SHOOT_3,
-        TO_PICK_3_START,
-        PICK_3,
 
-        SHOOT_4,
         PARK,
-        DONE,
-        PreJack1,
-
-        PreJack2,
-
-        PreJack3,
-        PRE_DIDDY
-
+        DONE
     }
 
     private AutoState state;
@@ -87,7 +80,6 @@ public class RED extends OpMode {
 
         state = AutoState.PRE_DIDDY;
         stateTimer.resetTimer();
-
     }
 
     /* =========================
@@ -101,19 +93,18 @@ public class RED extends OpMode {
         drivetrain.NewSetFlywheelRPM(-2850, 18, 0.0, 0, 14);
 
         switch (state) {
-            case PRE_DIDDY:
 
+            case PRE_DIDDY:
                 drivetrain.NewSetFlywheelRPM(-2950, 18, 0.0, 0, 14);
                 if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2.8) {
                     setPickupState();
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
                     state = AutoState.SHOOT_1;
                     stateTimer.resetTimer();
-                    drivetrain.NewSetFlywheelRPM(-2850, 18, 0.0, 0, 14);
                 }
                 break;
-            case SHOOT_1:
 
+            case SHOOT_1:
                 if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2) {
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
                     setPickupState();
@@ -124,7 +115,6 @@ public class RED extends OpMode {
 
             case TO_PICK_1_START:
                 if (!follower.isBusy()) {
-                    setPickupState();
                     follower.setMaxPower(.4);
                     follower.followPath(paths.PickEnd1);
                     state = AutoState.PICK_1;
@@ -136,19 +126,10 @@ public class RED extends OpMode {
                     follower.setMaxPower(maxp);
                     setShootingState();
                     follower.followPath(paths.Shooting2);
-                    state = AutoState.PreJack1;
-                    stateTimer.resetTimer();
-                }
-                break;
-            case PreJack1:
-                drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-                if (  !follower.isBusy()) {
-                    drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
                     state = AutoState.SHOOT_2;
                     stateTimer.resetTimer();
                 }
                 break;
-
 
             case SHOOT_2:
                 if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 1.7) {
@@ -159,31 +140,35 @@ public class RED extends OpMode {
                 break;
 
             case TO_PICK_2_START:
-
-
                 if (!follower.isBusy()) {
-                    setPickupState();
                     follower.setMaxPower(.25);
                     follower.followPath(paths.PickEnd2);
                     state = AutoState.PICK_2;
-
                 }
                 break;
-
-
 
             case PICK_2:
                 if (!follower.isBusy()) {
                     follower.setMaxPower(maxp);
-                    setShootingState();
-                    follower.followPath(paths.Shooting3);
-                    state = AutoState.PreJack2;
+                    setPickupState();
+                    follower.followPath(paths.Dump);
+                    state = AutoState.DUMP;
                     stateTimer.resetTimer();
                 }
                 break;
-            case PreJack2:
-                drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
+
+            case DUMP:
                 if (!follower.isBusy()) {
+                    setShootingState();
+                    follower.followPath(paths.Shooting3);
+                    state = AutoState.PRE_SHOOT_3;
+                    stateTimer.resetTimer();
+                }
+                break;
+
+            case PRE_SHOOT_3:
+                drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 5) {
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
                     state = AutoState.SHOOT_3;
                     stateTimer.resetTimer();
@@ -193,43 +178,7 @@ public class RED extends OpMode {
             case SHOOT_3:
                 if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 1.7) {
                     setPickupState();
-                    follower.setMaxPower(maxp);
-                    follower.followPath(paths.PickStart3);
-                    state = AutoState.TO_PICK_3_START;
-                }
-                break;
-
-            case TO_PICK_3_START:
-                if (!follower.isBusy()) {
-                    setPickupState();
-                    follower.setMaxPower(.4);
-                    follower.followPath(paths.PickEnd3);
-                    state = AutoState.PICK_3;
-                }
-                break;
-
-            case PICK_3:
-                if (!follower.isBusy()) {
-                    follower.setMaxPower(maxp);
-                    setShootingState();
-                    follower.followPath(paths.Shooting4);
-                    state = AutoState.PreJack3;
-                    stateTimer.resetTimer();
-                }
-                break;
-            case PreJack3:
-                drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-                if (!follower.isBusy()) {
-                    drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
-                    state = AutoState.SHOOT_4;
-                    stateTimer.resetTimer();
-                }
-                break;
-
-            case SHOOT_4:
-                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2.0) {
-                    setPickupState();
-                    follower.followPath(paths.END);
+                    follower.followPath(paths.Park);
                     state = AutoState.PARK;
                 }
                 break;
@@ -271,28 +220,21 @@ public class RED extends OpMode {
     }
 
     /* =========================
-       PATH DEFINITIONS (NEW)
+       PATH DEFINITIONS
        ========================= */
     public static class Paths {
 
         public PathChain Shooting1;
-
         public PathChain PickStart1;
         public PathChain PickEnd1;
 
         public PathChain Shooting2;
-
         public PathChain PickStart2;
         public PathChain PickEnd2;
 
+        public PathChain Dump;
         public PathChain Shooting3;
-
-        public PathChain PickStart3;
-        public PathChain PickEnd3;
-
-        public PathChain Shooting4;
-
-        public PathChain END;
+        public PathChain Park;
 
         public Paths(Follower follower) {
 
@@ -307,23 +249,22 @@ public class RED extends OpMode {
             PickStart1 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(87.792, 87.056),
-                                    new Pose(97.187, 80)
+                                    new Pose(97.187, 80.000)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
                     .build();
 
             PickEnd1 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(97.187, 80),
-                                    new Pose(127.891, 80)
+                                    new Pose(97.187, 80.000),
+                                    new Pose(127.000, 80.000)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-
                     .build();
 
             Shooting2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(127.891, 83.207),
+                                    new Pose(127.000, 80.000),
                                     new Pose(87.263, 86.721)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
@@ -332,66 +273,43 @@ public class RED extends OpMode {
             PickStart2 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(87.263, 86.721),
-                                    new Pose(96.007, 55)
+                                    new Pose(96.007, 55.000)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
-
                     .build();
 
             PickEnd2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(96.007, 55),
-                                    new Pose(121, 55)
+                                    new Pose(96.007, 55.000),
+                                    new Pose(121.000, 55.000)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                    .build();
 
+            Dump = follower.pathBuilder().addPath(
+                            new BezierCurve(
+                                    new Pose(121.000, 55.000),
+                                    new Pose(64.007, 61.344),
+                                    new Pose(126.760, 69.523)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
                     .build();
 
             Shooting3 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(121, 57),
-                                    new Pose(87.365, 86.983)
+                                    new Pose(126.760, 69.523),
+                                    new Pose(87.366, 86.880)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
-
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(45))
                     .build();
 
-            PickStart3 = follower.pathBuilder().addPath(
+            Park = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(87.365, 86.983),
-                                    new Pose(96.693, 32)
+                                    new Pose(87.366, 86.880),
+                                    new Pose(86.918, 111.829)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
-
-                    .build();
-
-            PickEnd3 = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(96.693, 32),
-                                    new Pose(130.198, 32)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-
-                    .build();
-
-            Shooting4 = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(130, 32),
-                                    new Pose(87.679, 86.903)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
-
-                    .build();
-
-            END = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(87.679, 86.903),
-                                    new Pose(95.437, 60.541)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
-
+                    ).setConstantHeadingInterpolation(Math.toRadians(45))
                     .build();
         }
     }
-
 }

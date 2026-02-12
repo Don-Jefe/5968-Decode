@@ -73,6 +73,9 @@ public class Drivetrain {
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
+
+
+
         // Set brake mode
         setBrakeMode(leftFront, leftBack, rightFront, rightBack, intake,feeder);
     }
@@ -137,9 +140,16 @@ public class Drivetrain {
     public PIDFCoefficients getFlywheelPID() {
         return flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    public void NewSetFlywheelRPM(double rpm, double p, double i, double d, double k) {
+    public void NewSetFlywheelRPM(double rpm, double p, double i, double d, double f) {
+        flywheel.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(p, i, d, f)
 
+        );
+
+        setFlywheelRPM(rpm);
     }
+
 
     public void setFeederPower(double seanIsFat) {
         feeder.setPower(seanIsFat);
@@ -166,6 +176,8 @@ public class Drivetrain {
         } else if (gamepad.leftBumperWasPressed()) {
             setFlywheelRPM(0);
         }
+
+
     }
     public void updateBlocker(Gamepad gamepad) {
 //        if (gamepad.circleWasPressed()) {
@@ -183,7 +195,7 @@ public class Drivetrain {
 
 
     public void updateIntake(double trigger) {
-        setIntakePower(trigger > 0.5 ? -1 : 0);
+        setIntakePower(trigger > 0.5 ? -.9 : 0);
     }
     public void updateIntakeX(double trigger) {
         setIntakePower(trigger > 0.5 ? 1 : 0);
@@ -201,4 +213,7 @@ public class Drivetrain {
     public void setFlywheelPower(double v) {
 
     }
+
+
+
 }
