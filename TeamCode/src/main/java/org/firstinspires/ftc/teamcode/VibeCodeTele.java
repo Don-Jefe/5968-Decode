@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.NotOpModes.CF;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
 @TeleOp(name = "Jeff's VIbecode Tele")
@@ -29,12 +30,20 @@ public class VibeCodeTele extends OpMode {
     public static final double RED_RESET_Y = 130.0;
     public static final double RED_RESET_HEADING = Math.toRadians(37);
 
+    public static final double RED_BACK_RESET_X= 136;
+    public static final double RED_BACK_RESET_Y = 8;
+    public static final double DEFAULT_RESET_HEADING = Math.toRadians(90);
+
+
+    public static final double BlUE_BACK_RESET_X = 8;
+    public static final double BLUE_BACK_RESET_Y = 8;
+
     /* =========================
        AIMBOT CONSTANTS
        ========================= */
-    public static double TURN_kP = 2.0;
-    public static double MAX_TURN_POWER = 1.0;
-    public static double AIM_DELAY_SEC = 0.30;
+    public static double TURN_kP = 2;
+    public static double MAX_TURN_POWER = 0.50;
+    public static double AIM_DELAY_SEC = 0.40;
 
     /* =========================
        HARDWARE
@@ -63,7 +72,7 @@ public class VibeCodeTele extends OpMode {
     private double rampedRPM = 0;
     private double lastLoopTime = 0;
 
-    public static double RPM_ACCEL = 3000;
+    public static double RPM_ACCEL = 6000;
     public static double RPM_DECEL = 9000;
 
     /* =========================
@@ -74,6 +83,7 @@ public class VibeCodeTele extends OpMode {
         double dy = targetY - pose.getY();
         double desiredHeading = Math.atan2(dy, dx);
         double error = normalizeAngle(desiredHeading - pose.getHeading());
+        telemetryM.debug("Actual Heading", desiredHeading);
         return clamp(error * TURN_kP, -MAX_TURN_POWER, MAX_TURN_POWER);
     }
 
@@ -107,10 +117,12 @@ public class VibeCodeTele extends OpMode {
     }
 
     private double getFlywheelRPMForDistance(double distance) {
-        distance = clamp(distance, CF.MIN_SHOT_DISTANCE, CF.MAX_SHOT_DISTANCE);
-        double t = (distance - CF.MIN_SHOT_DISTANCE) /
-                (CF.MAX_SHOT_DISTANCE - CF.MIN_SHOT_DISTANCE);
-        return CF.MIN_FLYWHEEL_RPM + t * (CF.MAX_FLYWHEEL_RPM - CF.MIN_FLYWHEEL_RPM);
+        return 0.0701569 * distance * distance + -7.65244 * distance + 2808.8812;
+//
+//        distance = clamp(distance, CF.MIN_SHOT_DISTANCE, CF.MAX_SHOT_DISTANCE);
+//        double t = (distance - CF.MIN_SHOT_DISTANCE) /
+//                (CF.MAX_SHOT_DISTANCE - CF.MIN_SHOT_DISTANCE);
+//        return CF.MIN_FLYWHEEL_RPM + t * (CF.MAX_FLYWHEEL_RPM - CF.MIN_FLYWHEEL_RPM);
     }
 
     private double getActualFlywheelRPM() {
@@ -170,11 +182,16 @@ public class VibeCodeTele extends OpMode {
         /* =========================
            POSE RESET
            ========================= */
-        if (gamepad1.dpadDownWasPressed()) {
+        if (gamepad1.leftBumperWasPressed()) {
             follower.setPose(isBlueAlliance
                     ? new Pose(BLUE_RESET_X, BLUE_RESET_Y, BLUE_RESET_HEADING)
                     : new Pose(RED_RESET_X, RED_RESET_Y, RED_RESET_HEADING));
+        } else if (gamepad1.rightBumperWasPressed()) {
+            follower.setPose(isBlueAlliance
+                    ? new Pose(BlUE_BACK_RESET_X, BLUE_BACK_RESET_Y, DEFAULT_RESET_HEADING)
+                    : new Pose(RED_BACK_RESET_X, RED_BACK_RESET_Y, DEFAULT_RESET_HEADING));
         }
+
 
         /* =========================
            AIMBOT + DRIVE
@@ -236,5 +253,6 @@ public class VibeCodeTele extends OpMode {
         telemetryM.debug("Actual Flywheel RPM", getActualFlywheelRPM());
         telemetryM.debug("Aimbot Active", aimbotActive);
         telemetryM.debug("Aim Timer (s)", aimTimer.seconds());
+        telemetryM.debug("Actual Heading", pose.getHeading());
     }
 }

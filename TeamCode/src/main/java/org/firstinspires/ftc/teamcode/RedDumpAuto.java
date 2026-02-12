@@ -16,13 +16,16 @@ import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
-@Autonomous(name = "VibeCodeTele")
-public class DumpAuto extends OpMode {
+@Autonomous(name = "Red Dump Auto - 9 Ball")
+public class RedDumpAuto extends OpMode {
 
     double maxp = 0.9;
 
+    /* =========================
+       STATE MACHINE
+       ========================= */
     private enum AutoState {
-        PRELOAD,
+        PRE_DIDDY,
 
         SHOOT_1,
         TO_PICK_1_START,
@@ -32,27 +35,36 @@ public class DumpAuto extends OpMode {
         TO_PICK_2_START,
         PICK_2,
 
-        DUMP_WAIT,
-
+        DUMP,
+        PRE_SHOOT_3,
         SHOOT_3,
+
         PARK,
         DONE
     }
 
     private AutoState state;
 
+    /* =========================
+       HARDWARE
+       ========================= */
     private Follower follower;
     private Drivetrain drivetrain;
     private Paths paths;
     private TelemetryManager telemetryM;
     private final Timer stateTimer = new Timer();
 
+    /* =========================
+       INIT
+       ========================= */
     @Override
     public void init() {
         drivetrain = new Drivetrain(hardwareMap);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(117, 127.625, Math.toRadians(45)));
+        follower.setStartingPose(
+                new Pose(117, 127.625, Math.toRadians(45))
+        );
         follower.update();
 
         paths = new Paths(follower);
@@ -61,23 +73,31 @@ public class DumpAuto extends OpMode {
 
     @Override
     public void start() {
-        follower.followPath(paths.Shooting1);
+        drivetrain.NewSetFlywheelRPM(-2850, 18, 0.0, 0, 14);
         drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-        state = AutoState.PRELOAD;
+
+        follower.followPath(paths.Shooting1);
+
+        state = AutoState.PRE_DIDDY;
         stateTimer.resetTimer();
     }
 
+    /* =========================
+       LOOP
+       ========================= */
     @Override
     public void loop() {
         follower.update();
         telemetryM.update();
 
-        // keep flywheel constantly regulated
-        drivetrain.NewSetFlywheelRPM(-2850, 18, 0, 0, 14);
+        drivetrain.NewSetFlywheelRPM(-2850, 18, 0.0, 0, 14);
 
         switch (state) {
-            case PRELOAD:
-                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() > 2.5) {
+
+            case PRE_DIDDY:
+                drivetrain.NewSetFlywheelRPM(-2950, 18, 0.0, 0, 14);
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2.8) {
+                    setPickupState();
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
                     state = AutoState.SHOOT_1;
                     stateTimer.resetTimer();
@@ -85,7 +105,8 @@ public class DumpAuto extends OpMode {
                 break;
 
             case SHOOT_1:
-                if (stateTimer.getElapsedTimeSeconds() > 1.5) {
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2) {
+                    drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
                     setPickupState();
                     follower.followPath(paths.PickStart1);
                     state = AutoState.TO_PICK_1_START;
@@ -111,8 +132,7 @@ public class DumpAuto extends OpMode {
                 break;
 
             case SHOOT_2:
-                drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
-                if (stateTimer.getElapsedTimeSeconds() > 1.5) {
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 1.7) {
                     setPickupState();
                     follower.followPath(paths.PickStart2);
                     state = AutoState.TO_PICK_2_START;
@@ -121,7 +141,7 @@ public class DumpAuto extends OpMode {
 
             case TO_PICK_2_START:
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(.4);
+                    follower.setMaxPower(.25);
                     follower.followPath(paths.PickEnd2);
                     state = AutoState.PICK_2;
                 }
@@ -130,27 +150,35 @@ public class DumpAuto extends OpMode {
             case PICK_2:
                 if (!follower.isBusy()) {
                     follower.setMaxPower(maxp);
-                    setIdleState();
+                    setPickupState();
                     follower.followPath(paths.Dump);
-                    state = AutoState.DUMP_WAIT;
+                    state = AutoState.DUMP;
                     stateTimer.resetTimer();
                 }
                 break;
 
-            case DUMP_WAIT:
-                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 5.0) {
+            case DUMP:
+                if (!follower.isBusy()) {
                     setShootingState();
                     follower.followPath(paths.Shooting3);
+                    state = AutoState.PRE_SHOOT_3;
+                    stateTimer.resetTimer();
+                }
+                break;
+
+            case PRE_SHOOT_3:
+                drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 5) {
+                    drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
                     state = AutoState.SHOOT_3;
                     stateTimer.resetTimer();
                 }
                 break;
 
             case SHOOT_3:
-                drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
-                if (stateTimer.getElapsedTimeSeconds() > 1.5) {
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 1.7) {
                     setPickupState();
-                    follower.followPath(paths.END);
+                    follower.followPath(paths.Park);
                     state = AutoState.PARK;
                 }
                 break;
@@ -167,19 +195,21 @@ public class DumpAuto extends OpMode {
                 break;
         }
 
-        telemetryM.debug("State", state);
-        telemetryM.debug("Time", stateTimer.getElapsedTimeSeconds());
+        telemetryM.debug("Auto State", state);
+        telemetryM.debug("State Time", stateTimer.getElapsedTimeSeconds());
     }
 
+    /* =========================
+       MECHANISM STATES
+       ========================= */
     private void setShootingState() {
         drivetrain.setIntakePower(-1.0);
         drivetrain.setFeederPower(1.0);
-        drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
     }
 
     private void setPickupState() {
         drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-        drivetrain.setIntakePower(-.8);
+        drivetrain.setIntakePower(-.75);
         drivetrain.setFeederPower(0.6);
     }
 
@@ -189,85 +219,97 @@ public class DumpAuto extends OpMode {
         drivetrain.setFeederPower(0);
     }
 
-    /*
-     ================= PATHS =================
-     */
+    /* =========================
+       PATH DEFINITIONS
+       ========================= */
     public static class Paths {
+
         public PathChain Shooting1;
         public PathChain PickStart1;
         public PathChain PickEnd1;
+
         public PathChain Shooting2;
         public PathChain PickStart2;
         public PathChain PickEnd2;
+
         public PathChain Dump;
         public PathChain Shooting3;
-        public PathChain END;
+        public PathChain Park;
 
         public Paths(Follower follower) {
 
             Shooting1 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(117.041, 127.625),
-                            new Pose(87.792, 87.056)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45)).build();
+                            new BezierLine(
+                                    new Pose(117.041, 127.625),
+                                    new Pose(87.792, 87.056)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
+                    .build();
 
             PickStart1 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(87.792, 87.056),
-                            new Pose(97.187, 83.658)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0)).build();
+                            new BezierLine(
+                                    new Pose(87.792, 87.056),
+                                    new Pose(97.187, 80.000)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
+                    .build();
 
             PickEnd1 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(97.187, 83.658),
-                            new Pose(120.046, 83.394)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+                            new BezierLine(
+                                    new Pose(97.187, 80.000),
+                                    new Pose(127.000, 80.000)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                    .build();
 
             Shooting2 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(120.046, 83.394),
-                            new Pose(87.263, 86.721)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45)).build();
+                            new BezierLine(
+                                    new Pose(127.000, 80.000),
+                                    new Pose(87.263, 86.721)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+                    .build();
 
             PickStart2 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(87.263, 86.721),
-                            new Pose(96.007, 59.614)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0)).build();
+                            new BezierLine(
+                                    new Pose(87.263, 86.721),
+                                    new Pose(96.007, 55.000)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
+                    .build();
 
             PickEnd2 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(96.007, 59.614),
-                            new Pose(120.027, 59.826)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+                            new BezierLine(
+                                    new Pose(96.007, 55.000),
+                                    new Pose(121.000, 55.000)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                    .build();
 
             Dump = follower.pathBuilder().addPath(
-                    new BezierCurve(
-                            new Pose(120.027, 59.826),
-                            new Pose(76.765, 62.944),
-                            new Pose(128.903, 70.274)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180)).build();
+                            new BezierCurve(
+                                    new Pose(121.000, 55.000),
+                                    new Pose(64.007, 61.344),
+                                    new Pose(126.760, 69.523)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
+                    .build();
 
             Shooting3 = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(128.903, 70.274),
-                            new Pose(87, 87)
-                    )
-            ).setTangentHeadingInterpolation().build();
+                            new BezierLine(
+                                    new Pose(126.760, 69.523),
+                                    new Pose(87.366, 86.880)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(45))
+                    .build();
 
-            END = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose(87, 87),
-                            new Pose(95, 120)
-                    )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+            Park = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(87.366, 86.880),
+                                    new Pose(86.918, 111.829)
+                            )
+                    ).setConstantHeadingInterpolation(Math.toRadians(45))
+                    .build();
         }
     }
 }

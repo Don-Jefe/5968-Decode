@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 //12 ball sick
 @Configurable
-@Autonomous(name = "Big Red Booti")
+@Autonomous(name = "Big Red - 12 Ball")
 public class RED extends OpMode {
 
     double maxp = 0.9;

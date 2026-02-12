@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 //12 ball sick
 @Configurable
-@Autonomous(name = "Big Blue Booti")
+@Autonomous(name = "Big Blue 12-Ball")
 public class BlueAuto extends OpMode {
 
     double maxp = 0.91;
