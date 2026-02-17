@@ -160,7 +160,7 @@ public class Drivetrain {
 
 
     public void updateFeeder(Gamepad gamepad) {
-        if (gamepad.right_trigger > 0.3) {
+        if (gamepad.right_trigger > 0.2) {
             setFeederPower(1);
         } else if (gamepad.left_trigger > 0.5) {
             setFeederPower(0.5);
@@ -186,7 +186,7 @@ public class Drivetrain {
 //            blocker.setPosition(blockerUp ? SERVO_TOP_POS : SERVO_BOTTOM_POS);
 //
 //        }
-        if (gamepad.right_trigger > 0.5) {
+        if (gamepad.right_trigger > 0.3) {
             blocker.setPosition(SERVO_BOTTOM_POS);
         } else {
             blocker.setPosition(SERVO_TOP_POS);

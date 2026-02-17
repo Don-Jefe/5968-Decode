@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.NotOpModes.PoseStorage;
 
 
 
@@ -241,6 +242,7 @@ public class BlueAuto extends OpMode {
                 break;
 
             case DONE:
+                PoseStorage.currentPose = follower.getPose();
                 drivetrain.setIntakePower(0);
                 drivetrain.setFeederPower(0);
                 break;

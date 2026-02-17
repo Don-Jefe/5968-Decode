@@ -12,9 +12,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.NotOpModes.CF;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.NotOpModes.PoseStorage;
+
 
 @Configurable
-@TeleOp(name = "Jeff's VIbecode Tele")
+@TeleOp(name = "Jeff's Final Tele-Op")
 public class VibeCodeTele extends OpMode {
 
     /* =========================
@@ -26,7 +28,7 @@ public class VibeCodeTele extends OpMode {
     public static final double BLUE_RESET_Y = 127.03;
     public static final double BLUE_RESET_HEADING = Math.toRadians(130);
 
-    public static final double RED_RESET_X = 120.0;
+    public static final double RED_RESET_X = 125.0;
     public static final double RED_RESET_Y = 130.0;
     public static final double RED_RESET_HEADING = Math.toRadians(37);
 
@@ -42,8 +44,8 @@ public class VibeCodeTele extends OpMode {
        AIMBOT CONSTANTS
        ========================= */
     public static double TURN_kP = 2;
-    public static double MAX_TURN_POWER = 0.50;
-    public static double AIM_DELAY_SEC = 0.40;
+    public static double MAX_TURN_POWER = 0.40;
+    public static double AIM_DELAY_SEC = 0.10;
 
     /* =========================
        HARDWARE
@@ -117,12 +119,11 @@ public class VibeCodeTele extends OpMode {
     }
 
     private double getFlywheelRPMForDistance(double distance) {
-        return 0.0701569 * distance * distance + -7.65244 * distance + 2808.8812;
-//
-//        distance = clamp(distance, CF.MIN_SHOT_DISTANCE, CF.MAX_SHOT_DISTANCE);
-//        double t = (distance - CF.MIN_SHOT_DISTANCE) /
-//                (CF.MAX_SHOT_DISTANCE - CF.MIN_SHOT_DISTANCE);
-//        return CF.MIN_FLYWHEEL_RPM + t * (CF.MAX_FLYWHEEL_RPM - CF.MIN_FLYWHEEL_RPM);
+        if (distance < 140) {
+            return 0.0701569 * distance * distance + -7.65244 * distance + 2808.8812;
+        } else return 3100;
+
+
     }
 
     private double getActualFlywheelRPM() {
@@ -148,7 +149,7 @@ public class VibeCodeTele extends OpMode {
         drivetrain = new Drivetrain(hardwareMap);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(0, 0, Math.PI / 2));
+        follower.setStartingPose(PoseStorage.currentPose);
         follower.update();
 
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -168,6 +169,11 @@ public class VibeCodeTele extends OpMode {
     public void loop() {
         follower.update();
         telemetryM.update();
+        if (isBlueAlliance) {
+            gamepad1.setLedColor(0, 0, 255,1000);
+        } else {
+            gamepad1.setLedColor(255, 0, 0,1000);
+        }
 
         Pose pose = follower.getPose();
 
@@ -182,11 +188,11 @@ public class VibeCodeTele extends OpMode {
         /* =========================
            POSE RESET
            ========================= */
-        if (gamepad1.leftBumperWasPressed()) {
+        if (gamepad1.dpadUpWasPressed()) {
             follower.setPose(isBlueAlliance
                     ? new Pose(BLUE_RESET_X, BLUE_RESET_Y, BLUE_RESET_HEADING)
                     : new Pose(RED_RESET_X, RED_RESET_Y, RED_RESET_HEADING));
-        } else if (gamepad1.rightBumperWasPressed()) {
+        } else if (gamepad1.dpadDownWasPressed()) {
             follower.setPose(isBlueAlliance
                     ? new Pose(BlUE_BACK_RESET_X, BLUE_BACK_RESET_Y, DEFAULT_RESET_HEADING)
                     : new Pose(RED_BACK_RESET_X, RED_BACK_RESET_Y, DEFAULT_RESET_HEADING));
@@ -196,7 +202,7 @@ public class VibeCodeTele extends OpMode {
         /* =========================
            AIMBOT + DRIVE
            ========================= */
-        boolean aimbotActive = gamepad1.right_trigger > 0.5;
+        boolean aimbotActive = gamepad1.right_trigger > 0.7;
 
         if (aimbotActive && !wasAimbotActive) {
             aimTimer.reset();

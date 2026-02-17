@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.NotOpModes.CF;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 
 @Configurable
-@TeleOp(name = "Jeff's Aimbot Tele")
+@TeleOp(name = "Dont Use this")
 public class DecodeTele extends OpMode {
 
     /* =========================
