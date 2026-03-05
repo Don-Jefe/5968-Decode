@@ -26,6 +26,7 @@ public class Drivetrain {
     public final DcMotorEx flywheel;
     private final DcMotor feeder;
     public final Servo blocker;
+    public final DcMotorEx flywheel2;
 
    public double feedPower = 0.5;
     // Subsystems
@@ -37,7 +38,7 @@ public class Drivetrain {
     // Sensors
     private final IMU imu;
 
-    // there are 28 encoder ticks in per revolution for the 6k rpm motors
+    //There are 28 encoder ticks per revolution for the 6k rpm motors
     private static final double TICKS_PER_REV = 28.0;
     public static final double SERVO_TOP_POS = .41;
     public static final double SERVO_BOTTOM_POS = 0.75;
@@ -55,6 +56,7 @@ public class Drivetrain {
         rightBack = hardwareMap.get(DcMotor.class, "rr");
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         feeder = hardwareMap.get(DcMotor.class, "feeder");
+        flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
 
         blocker = hardwareMap.get(Servo.class, "blocker");
 
@@ -72,7 +74,8 @@ public class Drivetrain {
         // Motor directions
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel2.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
 
@@ -136,7 +139,9 @@ public class Drivetrain {
     public void setFlywheelRPM(double rpm) {
         double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
        flywheel.setVelocity(ticksPerSecond);
+       flywheel2.setVelocity(ticksPerSecond);
     }
+
     public PIDFCoefficients getFlywheelPID() {
         return flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
     }
@@ -150,6 +155,22 @@ public class Drivetrain {
         setFlywheelRPM(rpm);
     }
 
+
+    public void setBothFlywheelRPM(double rpm, double p, double i, double d, double f) {
+        flywheel.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(p, i, d, f)
+
+        );
+        flywheel2.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(p, i, d, f)
+
+        );
+
+
+
+    }
 
     public void setFeederPower(double seanIsFat) {
         feeder.setPower(seanIsFat);
@@ -170,15 +191,7 @@ public class Drivetrain {
             setFeederPower(0);
         }
     }
-    public void updateFlywheel(Gamepad gamepad) {
-        if (gamepad.rightBumperWasPressed()) {
-            setFlywheelRPM(CF.CloseRPM);
-        } else if (gamepad.leftBumperWasPressed()) {
-            setFlywheelRPM(0);
-        }
 
-
-    }
     public void updateBlocker(Gamepad gamepad) {
 //        if (gamepad.circleWasPressed()) {
 //            blockerUp = !blockerUp;
@@ -199,6 +212,22 @@ public class Drivetrain {
     }
     public void updateIntakeX(double trigger) {
         setIntakePower(trigger > 0.5 ? 1 : 0);
+    }
+
+    public void setDualFlywheelRPM(double rpm, double p, double i, double d, double f) {
+
+        PIDFCoefficients pidf = new PIDFCoefficients(p, i, d, f);
+
+        flywheel.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+
+        flywheel2.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+
+        double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
+
+        flywheel.setVelocity(ticksPerSecond);
+        flywheel2.setVelocity(ticksPerSecond);
     }
 
 

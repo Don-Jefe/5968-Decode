@@ -46,13 +46,13 @@ public class Constants {
             .yVelocity(52.54);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(3.625)
-            .strafePodX(-5.75)
+            .forwardPodY(0)
+            .strafePodX(-0)
 
             // See attached https://pedropathing.com/_next/static/media/odometry.528df183.png
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 }
