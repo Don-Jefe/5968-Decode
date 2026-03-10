@@ -4,69 +4,47 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.teamcode.NotOpModes.PoseStorage;
 
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.NotOpModes.PoseStorage;
-
 
 @Configurable
-@Autonomous(name = " RED 6/Dump/3 ")
-public class RedDumpAuto extends OpMode {
+@Autonomous(name = "Red 3/Dump/6")
+public class RedSean extends OpMode {
 
-    double maxp = 0.9;
+    double maxp = 0.67;
 
-    /* =========================
-       STATE MACHINE
-       ========================= */
+    /* ================= STATE MACHINE ================= */
     private enum AutoState {
-        TO_SHOOT_1,
-        SHOOT_1,
-
-        TO_PICK_1_START,
-        TO_PICK_1_END,
-
-        TO_SHOOT_2,
-        SHOOT_2,
-
-        TO_DUMP_START,
-        TO_DUMP_END,
-
+        TO_SHOOT_1, SHOOT_1,
+        TO_PICK_1_START, TO_PICK_1_END,
         TO_MIDPOINT,
-
-        TO_PICK_2_START,
-        TO_PICK_2_END,
-
-        TO_SHOOT_3,
-        SHOOT_3,
-
+        TO_DUMP_START, TO_DUMP_END,
+        TO_SHOOT_2, SHOOT_2,
+        TO_PICK_2_START, TO_PICK_2_END,
+        DODGE,
+        TO_SHOOT_3, SHOOT_3,
         TO_PARK,
-        DONE,
-        Dodge
+        DONE
     }
-
 
     private AutoState state;
 
-    /* =========================
-       HARDWARE
-       ========================= */
+    /* ================= HARDWARE ================= */
     private Follower follower;
     private Drivetrain drivetrain;
     private Paths paths;
     private TelemetryManager telemetryM;
     private final Timer stateTimer = new Timer();
 
-    /* =========================
-       INIT
-       ========================= */
+    /* ================= INIT ================= */
     @Override
     public void init() {
         drivetrain = new Drivetrain(hardwareMap);
@@ -79,22 +57,20 @@ public class RedDumpAuto extends OpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     }
 
-
+    /* ================= START ================= */
     @Override
     public void start() {
         drivetrain.NewSetFlywheelRPM(-2850, 18, 0, 0, 14);
-
         follower.followPath(paths.Shooting1);
         state = AutoState.TO_SHOOT_1;
         stateTimer.resetTimer();
+        follower.setMaxPower(0.8);
     }
 
-
-    /* =========================
-       LOOP
-       ========================= */
+    /* ================= LOOP ================= */
     @Override
     public void loop() {
+        follower.setMaxPower(maxp);
         follower.update();
         telemetryM.update();
 
@@ -102,9 +78,8 @@ public class RedDumpAuto extends OpMode {
 
         switch (state) {
 
-            /* ================= SHOOT 1 ================= */
             case TO_SHOOT_1:
-                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2.8) {
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 2.5) {
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
                     setShootingState();
                     state = AutoState.SHOOT_1;
@@ -113,18 +88,16 @@ public class RedDumpAuto extends OpMode {
                 break;
 
             case SHOOT_1:
-                if (stateTimer.getElapsedTimeSeconds() >= 1.2) {
+                if (stateTimer.getElapsedTimeSeconds() >= 2.3) {
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-                    setPickupState();  // stop firing
+                    setPickupState();
                     follower.followPath(paths.PickStart1);
                     state = AutoState.TO_PICK_1_START;
                 }
                 break;
 
-            /* ================= PICK 1 ================= */
             case TO_PICK_1_START:
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(.4);
                     follower.followPath(paths.PickEnd1);
                     state = AutoState.TO_PICK_1_END;
                 }
@@ -132,15 +105,34 @@ public class RedDumpAuto extends OpMode {
 
             case TO_PICK_1_END:
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(maxp);
-                    setShootingState();
-                    follower.followPath(paths.Shooting2);
-                    state = AutoState.TO_SHOOT_2;
+                    follower.followPath(paths.Midpoint);
+                    state = AutoState.TO_MIDPOINT;
+                }
+                break;
+
+            case TO_MIDPOINT:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.DumpStart);
+                    state = AutoState.TO_DUMP_START;
+                }
+                break;
+
+            case TO_DUMP_START:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.DumpEnd);
+                    state = AutoState.TO_DUMP_END;
                     stateTimer.resetTimer();
                 }
                 break;
 
-            /* ================= SHOOT 2 → DUMP ================= */
+            case TO_DUMP_END:
+                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 3.2 ) {
+                    setShootingState();
+                    follower.followPath(paths.Shooting2);
+                    state = AutoState.TO_SHOOT_2;
+                }
+                break;
+
             case TO_SHOOT_2:
                 if (!follower.isBusy()) {
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
@@ -150,64 +142,36 @@ public class RedDumpAuto extends OpMode {
                 break;
 
             case SHOOT_2:
-                if (stateTimer.getElapsedTimeSeconds() >= 2.0) {
+                if (stateTimer.getElapsedTimeSeconds() >= 2) {
+                    drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
                     setPickupState();
-                    follower.followPath(paths.DumpStart);
-                    state = AutoState.TO_DUMP_START;
-                    drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-                }
-                break;
-            case TO_DUMP_START:
-                if (!follower.isBusy()) {
-                    drivetrain.blocker.setPosition(Drivetrain.SERVO_TOP_POS);
-                    follower.followPath(paths.DumpEnd);
-                    state = AutoState.TO_DUMP_END;
-                    stateTimer.resetTimer();
-                }
-                break;
-
-            case TO_DUMP_END:
-                if (!follower.isBusy() && stateTimer.getElapsedTimeSeconds() >= 3.2) {
-                    follower.followPath(paths.Midpoint);
-                    state = AutoState.TO_MIDPOINT;
-                }
-                break;
-
-            /* ================= MID ================= */
-            case TO_MIDPOINT:
-                if (!follower.isBusy()) {
                     follower.followPath(paths.PickStart2);
                     state = AutoState.TO_PICK_2_START;
                 }
                 break;
 
-            /* ================= PICK 2 ================= */
             case TO_PICK_2_START:
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(.8);
                     follower.followPath(paths.PickEnd2);
                     state = AutoState.TO_PICK_2_END;
                 }
                 break;
 
-
-
             case TO_PICK_2_END:
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(maxp);
                     setShootingState();
                     follower.followPath(paths.Dodge);
-                    state = AutoState.Dodge;
-                    stateTimer.resetTimer();
+                    state = AutoState.DODGE;
                 }
                 break;
-            case Dodge:
+
+            case DODGE:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Shooting3);
                     state = AutoState.TO_SHOOT_3;
                 }
+                break;
 
-            /* ================= SHOOT 3 ================= */
             case TO_SHOOT_3:
                 if (!follower.isBusy()) {
                     drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
@@ -217,14 +181,13 @@ public class RedDumpAuto extends OpMode {
                 break;
 
             case SHOOT_3:
-                if (stateTimer.getElapsedTimeSeconds() >= 2.0) {
+                if (stateTimer.getElapsedTimeSeconds() >= 2) {
                     setPickupState();
                     follower.followPath(paths.Park);
                     state = AutoState.TO_PARK;
                 }
                 break;
 
-            /* ================= PARK ================= */
             case TO_PARK:
                 if (!follower.isBusy()) {
                     state = AutoState.DONE;
@@ -238,14 +201,11 @@ public class RedDumpAuto extends OpMode {
                 break;
         }
 
-
         telemetryM.debug("Auto State", state);
         telemetryM.debug("State Time", stateTimer.getElapsedTimeSeconds());
     }
 
-    /* =========================
-       MECHANISM STATES
-       ========================= */
+    /* ================= MECHANISMS ================= */
     private void setShootingState() {
         drivetrain.setIntakePower(-1.0);
         drivetrain.setFeederPower(0.80);
@@ -257,34 +217,12 @@ public class RedDumpAuto extends OpMode {
         drivetrain.setFeederPower(0.6);
     }
 
-    private void setDumpState() {
-        drivetrain.setIntakePower(0);
-        drivetrain.setFeederPower(0);
-        drivetrain.blocker.setPosition(Drivetrain.SERVO_BOTTOM_POS);
-    }
-
-    /* =========================
-       PATHS
-       ========================= */
+    /* ================= PATHS ================= */
     public static class Paths {
 
-        public PathChain Shooting1;
-
-        public PathChain PickStart1;
-        public PathChain PickEnd1;
-        public PathChain Shooting2;
-
-        public PathChain DumpStart;
-        public PathChain DumpEnd;
-
-        public PathChain PickStart2;
-        public PathChain PickEnd2;
-        public PathChain Shooting3;
-
-        public PathChain Park;
-
-        public PathChain Midpoint;
-        public PathChain Dodge;
+        public PathChain Shooting1, PickStart1, PickEnd1, Midpoint;
+        public PathChain DumpStart, DumpEnd, Shooting2;
+        public PathChain PickStart2, PickEnd2, Dodge, Shooting3, Park;
 
         public Paths(Follower follower) {
 
@@ -309,19 +247,19 @@ public class RedDumpAuto extends OpMode {
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
-            Shooting2 = follower.pathBuilder().addPath(
+            Midpoint = follower.pathBuilder().addPath(
                     new BezierLine(
-                            new Pose(123.891, 83),
-                            new Pose(87.263, 86.721)
+                            new Pose(123.891, 80),
+                            new Pose(100.37481910274964, 85.60492040520984)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180)).build();
 
             DumpStart = follower.pathBuilder().addPath(
                     new BezierLine(
-                            new Pose(87.263, 86.721),
+                            new Pose(100.37481910274964, 85.60492040520984),
                             new Pose(93.590, 82.838)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(180)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
 
             DumpEnd = follower.pathBuilder().addPath(
                     new BezierLine(
@@ -329,19 +267,20 @@ public class RedDumpAuto extends OpMode {
                             new Pose(115.795, 75.421)
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
-            Midpoint  = follower.pathBuilder().addPath(
+
+            Shooting2 = follower.pathBuilder().addPath(
                     new BezierLine(
-                            new Pose(115.795, 70.421),
-                            new Pose(80.37481910274964, 85.60492040520984)
+                            new Pose(115.795, 75.421),
+                            new Pose(87.263, 86.721)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(45)).build();
 
             PickStart2 = follower.pathBuilder().addPath(
                     new BezierLine(
-                            new Pose(80.37481910274964, 85.60492040520984),
+                            new Pose(87.263, 86.721),
                             new Pose(80.576, 54.357)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(0)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0)).build();
 
             PickEnd2 = follower.pathBuilder().addPath(
                     new BezierLine(
@@ -350,7 +289,7 @@ public class RedDumpAuto extends OpMode {
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
-            Dodge  = follower.pathBuilder().addPath(
+            Dodge = follower.pathBuilder().addPath(
                     new BezierLine(
                             new Pose(128.689, 54.492),
                             new Pose(118.689, 54.492)
@@ -359,7 +298,7 @@ public class RedDumpAuto extends OpMode {
 
             Shooting3 = follower.pathBuilder().addPath(
                     new BezierLine(
-                            new Pose(118, 54.492),
+                            new Pose(118.689, 54.492),
                             new Pose(86.967, 87.232)
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45)).build();

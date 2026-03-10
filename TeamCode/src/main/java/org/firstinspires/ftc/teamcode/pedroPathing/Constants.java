@@ -17,8 +17,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(10.4)
-            .forwardZeroPowerAcceleration(-31.44)
-            .lateralZeroPowerAcceleration(-61.41);
+            .forwardZeroPowerAcceleration(-29.34)
+            .lateralZeroPowerAcceleration(-57.41)
+            ;
             // update with the mass of the robot
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
@@ -41,17 +42,17 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(66.242)
+            .xVelocity(64.305)
             .yVelocity(52.54);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(3.625)
-            .strafePodX(-5.75)
+            .forwardPodY(0)
+            .strafePodX(-0)
 
             // See attached https://pedropathing.com/_next/static/media/odometry.528df183.png
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 }
