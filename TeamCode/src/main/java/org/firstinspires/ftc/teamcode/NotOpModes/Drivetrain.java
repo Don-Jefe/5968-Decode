@@ -167,6 +167,7 @@ public class Drivetrain {
                 new PIDFCoefficients(p, i, d, f)
 
         );
+        setFlywheelRPM(rpm);
 
 
 
