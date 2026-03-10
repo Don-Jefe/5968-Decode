@@ -12,8 +12,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.NotOpModes.CF;
 import org.firstinspires.ftc.teamcode.NotOpModes.Drivetrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.NotOpModes.PoseStorage;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
 @TeleOp(name = "Goop GOOP")
@@ -58,8 +58,8 @@ public class States_Tele extends OpMode {
     public static double RECOVERY_THRESHOLD = 150;
 
     public static double FEEDER_POWER = 1.0;
-    public static double RPM_TOLERANCE = 120;      // REQUIRED
-    public static double RPM_UNLOCK = 200;         // hysteresis
+    public static double RPM_TOLERANCE = 120;
+    public static double RPM_UNLOCK = 200;
 
     private double targetRPM = 0;
     private double rampedRPM = 0;
@@ -73,7 +73,7 @@ public class States_Tele extends OpMode {
     private Drivetrain drivetrain;
     private TelemetryManager telemetryM;
 
-    /* ================= TARGETING ================= */
+    /* ================= TARGET ================= */
 
     private double targetX;
     private double targetY;
@@ -84,7 +84,7 @@ public class States_Tele extends OpMode {
     private final ElapsedTime aimTimer = new ElapsedTime();
     private boolean wasAimbotActive = false;
 
-    /* ============================================================= */
+    /* ================================================= */
 
     @Override
     public void init() {
@@ -123,6 +123,7 @@ public class States_Tele extends OpMode {
         handleLeadToggle();
 
         boolean aimbotActive = gamepad1.right_trigger > 0.7;
+
         handleDrive(pose, aimbotActive);
 
         updateFlywheelControl(pose);
@@ -147,6 +148,7 @@ public class States_Tele extends OpMode {
 
         double forward = -gamepad1.left_stick_y;
         double strafe = -gamepad1.left_stick_x;
+
         double turn = aimbotActive
                 ? getTurnToTarget(pose)
                 : -gamepad1.right_stick_x;
@@ -211,19 +213,19 @@ public class States_Tele extends OpMode {
             drivetrain.setIntakePower(-1);
 
             double actualRPM = getActualFlywheelRPM();
-            double rpmError = Math.abs(actualRPM - targetRPM);
 
-            // LOCK when within 120 RPM
-            if (!flywheelReady && rpmError <= RPM_TOLERANCE) {
+            // Compare to ramped RPM (NOT target)
+            double rpmError = Math.abs(actualRPM - rampedRPM);
+
+            if (!flywheelReady && rpmError <= RPM_TOLERANCE)
                 flywheelReady = true;
-            }
 
-            // UNLOCK only if we fall far out (hysteresis)
-            if (flywheelReady && rpmError > RPM_UNLOCK) {
+            if (flywheelReady && rpmError > RPM_UNLOCK)
                 flywheelReady = false;
-            }
 
-            drivetrain.setFeederPower(flywheelReady ? FEEDER_POWER : 0);
+            drivetrain.setFeederPower(
+                    flywheelReady ? FEEDER_POWER : 0
+            );
 
         } else {
 
@@ -252,6 +254,7 @@ public class States_Tele extends OpMode {
             tof = distance / SHOT_SPEED_IPS;
 
             Vector vel = follower.getVelocity();
+
             basketX -= vel.getXComponent() * tof;
             basketY -= vel.getYComponent() * tof;
         }
@@ -275,11 +278,15 @@ public class States_Tele extends OpMode {
     }
 
     private void handlePoseReset() {
+
         if (gamepad1.dpadUpWasPressed()) {
+
             follower.setPose(isBlueAlliance
                     ? new Pose(BLUE_RESET_X, BLUE_RESET_Y, BLUE_RESET_HEADING)
                     : new Pose(RED_RESET_X, RED_RESET_Y, RED_RESET_HEADING));
+
         } else if (gamepad1.dpadDownWasPressed()) {
+
             follower.setPose(isBlueAlliance
                     ? new Pose(BLUE_BACK_RESET_X, BLUE_BACK_RESET_Y, DEFAULT_RESET_HEADING)
                     : new Pose(RED_BACK_RESET_X, RED_BACK_RESET_Y, DEFAULT_RESET_HEADING));
@@ -287,12 +294,12 @@ public class States_Tele extends OpMode {
     }
 
     private void handleLeadToggle() {
-        if (gamepad1.squareWasPressed()) {
+        if (gamepad1.squareWasPressed())
             leadShotEnabled = !leadShotEnabled;
-        }
     }
 
     private void updateAllianceTarget() {
+
         if (isBlueAlliance) {
             targetX = 8;
             targetY = FIELD_SIZE - 8;
@@ -303,10 +310,11 @@ public class States_Tele extends OpMode {
     }
 
     private void updateAllianceLED() {
+
         if (isBlueAlliance)
-            gamepad1.setLedColor(0, 0, 255, 1000);
+            gamepad1.setLedColor(0,0,255,1000);
         else
-            gamepad1.setLedColor(255, 0, 0, 1000);
+            gamepad1.setLedColor(255,0,0,1000);
     }
 
     private double getDistanceToBasket(Pose pose) {
@@ -314,21 +322,26 @@ public class States_Tele extends OpMode {
     }
 
     private double getFlywheelRPMForDistance(double distance) {
+
         if (distance < 140)
             return 0.0701569 * distance * distance
-                    - 7.65244 * distance + 2808.8812;
-        else
-            return 3100;
+                    - 7.65244 * distance
+                    + 2808.8812;
+
+        return 3100;
     }
 
     private double getActualFlywheelRPM() {
+
         double ticksPerSecond = drivetrain.flywheel.getVelocity();
         return (ticksPerSecond / 28.0) * 60.0;
     }
 
     private double normalizeAngle(double angle) {
+
         while (angle > Math.PI) angle -= 2 * Math.PI;
         while (angle < -Math.PI) angle += 2 * Math.PI;
+
         return angle;
     }
 
@@ -342,9 +355,11 @@ public class States_Tele extends OpMode {
 
         telemetryM.debug("Alliance", isBlueAlliance ? "BLUE" : "RED");
         telemetryM.debug("Pose", pose);
+
         telemetryM.debug("Target RPM", targetRPM);
         telemetryM.debug("Ramped RPM", rampedRPM);
         telemetryM.debug("Actual RPM", getActualFlywheelRPM());
+
         telemetryM.debug("Flywheel Ready", flywheelReady);
         telemetryM.debug("Lead Shot", leadShotEnabled ? "ON" : "OFF");
     }

@@ -18,7 +18,7 @@ public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(10.4)
             .forwardZeroPowerAcceleration(-29.34)
-            .lateralZeroPowerAcceleration(-57.41)
+            .lateralZeroPowerAcceleration(-69.41)
             ;
             // update with the mass of the robot
 
@@ -42,12 +42,12 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(64.305)
+            .xVelocity(65.07)
             .yVelocity(52.54);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(0)
-            .strafePodX(-0)
+            .strafePodX(-1)
 
             // See attached https://pedropathing.com/_next/static/media/odometry.528df183.png
             .distanceUnit(DistanceUnit.INCH)

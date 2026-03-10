@@ -100,7 +100,7 @@ public class BlueAuto extends OpMode {
         follower.update();
         telemetryM.update();
 
-        drivetrain.NewSetFlywheelRPM(-2850, 18, 0.0, 0, 14);
+        drivetrain.NewSetFlywheelRPM(-2950, 18, 0.0, 0, 14);
 
         switch (state) {
             case PRE_DIDDY:
@@ -127,7 +127,7 @@ public class BlueAuto extends OpMode {
             case TO_PICK_1_START:
                 if (!follower.isBusy()) {
                     setPickupState();
-                    follower.setMaxPower(.5);
+                    follower.setMaxPower(.9);
                     follower.followPath(paths.PickEnd1);
                     state = AutoState.PICK_1;
                 }
@@ -165,7 +165,7 @@ public class BlueAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     setPickupState();
-                    follower.setMaxPower(.32);
+                    follower.setMaxPower(0.9);
                     follower.followPath(paths.PickEnd2);
                     state = AutoState.PICK_2;
 
@@ -203,7 +203,7 @@ public class BlueAuto extends OpMode {
             case TO_PICK_3_START:
                 if (!follower.isBusy()) {
                     setPickupState();
-                    follower.setMaxPower(.4);
+                    follower.setMaxPower(.9);
                     follower.followPath(paths.PickEnd3);
                     state = AutoState.PICK_3;
                 }
@@ -276,66 +276,64 @@ public class BlueAuto extends OpMode {
        PATH DEFINITIONS (NEW)
        ========================= */
     public static class Paths {
-
         public PathChain Shooting1;
-
         public PathChain PickStart1;
         public PathChain PickEnd1;
-
         public PathChain Shooting2;
-
         public PathChain PickStart2;
         public PathChain PickEnd2;
-
         public PathChain Shooting3;
-
         public PathChain PickStart3;
         public PathChain PickEnd3;
-
         public PathChain Shooting4;
-
         public PathChain END;
 
         public Paths(Follower follower) {
-
             Shooting1 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(26.959, 127.625),
+
                                     new Pose(56.208, 87.056)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(135))
+
                     .build();
 
             PickStart1 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(56.208, 87.056),
-                                    new Pose(46.813, 82.658)
+
+                                    new Pose(46.813, 83.658)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
+
                     .build();
 
             PickEnd1 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(46.813, 82.658),
-                                    new Pose(12, 82.394)
+                                    new Pose(46.813, 83.658),
+
+                                    new Pose(19.577, 83.602)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .setVelocityConstraint(0.28)
 
                     .build();
 
             Shooting2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(12, 82.394),
+                                    new Pose(19.577, 83.602),
+
                                     new Pose(56.737, 86.721)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
+
                     .build();
 
             PickStart2 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(56.737, 86.721),
-                                    new Pose(47.993, 57.000)
+
+                                    new Pose(47.993, 59.614)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
 
@@ -343,17 +341,18 @@ public class BlueAuto extends OpMode {
 
             PickEnd2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(47.993, 57.000),
-                                    new Pose(12, 57.00)
+                                    new Pose(47.993, 59.614),
+
+                                    new Pose(18.973, 59.826)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .setVelocityConstraint(0.25)
 
                     .build();
 
             Shooting3 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(12, 58.826),
+                                    new Pose(18.973, 59.826),
+
                                     new Pose(56.635, 86.983)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
@@ -363,7 +362,8 @@ public class BlueAuto extends OpMode {
             PickStart3 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(56.635, 86.983),
-                                    new Pose(47.307, 33.913)
+
+                                    new Pose(47.307, 34.913)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
 
@@ -371,17 +371,18 @@ public class BlueAuto extends OpMode {
 
             PickEnd3 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(47.307, 33.913),
-                                    new Pose(4, 33.970)
+                                    new Pose(47.307, 34.913),
+
+                                    new Pose(18.732, 34.970)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .setVelocityConstraint(0.35)
 
                     .build();
 
             Shooting4 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(4, 33.970),
+                                    new Pose(18.732, 34.970),
+
                                     new Pose(56.321, 86.903)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
@@ -391,9 +392,11 @@ public class BlueAuto extends OpMode {
             END = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(56.321, 86.903),
-                                    new Pose(48.563, 60.541)
+
+                                    new Pose(56.733, 111.380)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(135))
+
                     .build();
         }
     }
